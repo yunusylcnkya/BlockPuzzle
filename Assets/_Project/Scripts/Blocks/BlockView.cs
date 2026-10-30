@@ -4,6 +4,7 @@ using UnityEngine;
 
 namespace BlockPuzzle.Blocks
 {
+    [RequireComponent(typeof(RectTransform))]
     public sealed class BlockView : MonoBehaviour
     {
         [SerializeField] private BlockCellView cellPrefab;
@@ -12,70 +13,79 @@ namespace BlockPuzzle.Blocks
 
         private readonly List<BlockCellView> spawnedCells = new();
 
+        private RectTransform rectTransform;
+        private Vector2 originalPosition;
+
         public BlockDefinition Definition { get; private set; }
+        public RectTransform RectTransform => rectTransform;
+
+        private void Awake()
+        {
+            rectTransform = GetComponent<RectTransform>();
+        }
 
         public void Initialize(BlockDefinition definition)
         {
-            if (definition == null || !definition.IsValid())
+            if (definition == null || !definition.IsValid() ||
+                cellPrefab == null)
             {
-                Debug.LogError("[BlockView] Invalid block definition.");
-                return;
-            }
-
-            if (cellPrefab == null)
-            {
-                Debug.LogError("[BlockView] Cell prefab missing.");
+                Debug.LogError("[BlockView] Invalid setup.");
                 return;
             }
 
             ClearVisuals();
-
             Definition = definition;
 
             float step = cellSize + spacing;
-
             float width = definition.Width * step - spacing;
             float height = definition.Height * step - spacing;
 
             foreach (Vector2Int coordinate in definition.Cells)
             {
-                BlockCellView cell = Instantiate(
-                    cellPrefab,
-                    transform
-                );
+                BlockCellView cell = Instantiate(cellPrefab, transform);
 
-                RectTransform rect =
+                RectTransform cellRect =
                     cell.GetComponent<RectTransform>();
 
-                rect.anchorMin = Vector2.one * 0.5f;
-                rect.anchorMax = Vector2.one * 0.5f;
-                rect.pivot = Vector2.one * 0.5f;
+                cellRect.anchorMin = Vector2.one * 0.5f;
+                cellRect.anchorMax = Vector2.one * 0.5f;
+                cellRect.pivot = Vector2.one * 0.5f;
+                cellRect.sizeDelta = new Vector2(cellSize, cellSize);
 
-                rect.sizeDelta = new Vector2(cellSize, cellSize);
+                float x = coordinate.x * step -
+                    width * 0.5f + cellSize * 0.5f;
 
-                float x = coordinate.x * step
-                    - width * 0.5f + cellSize * 0.5f;
+                float y = coordinate.y * step -
+                    height * 0.5f + cellSize * 0.5f;
 
-                float y = coordinate.y * step
-                    - height * 0.5f + cellSize * 0.5f;
-
-                rect.anchoredPosition = new Vector2(x, y);
-
+                cellRect.anchoredPosition = new Vector2(x, y);
                 cell.SetColor(definition.BlockColor);
 
                 spawnedCells.Add(cell);
             }
+
+            originalPosition = rectTransform.anchoredPosition;
+        }
+
+        public void SetPosition(Vector2 position)
+        {
+            rectTransform.anchoredPosition = position;
+        }
+
+        public void ResetPosition()
+        {
+            rectTransform.anchoredPosition = originalPosition;
         }
 
         private void ClearVisuals()
         {
             foreach (BlockCellView cell in spawnedCells)
             {
-                if (cell == null)
-                    continue;
-
-                cell.gameObject.SetActive(false);
-                Destroy(cell.gameObject);
+                if (cell != null)
+                {
+                    cell.gameObject.SetActive(false);
+                    Destroy(cell.gameObject);
+                }
             }
 
             spawnedCells.Clear();

@@ -1,6 +1,7 @@
 
 using System.Collections.Generic;
 using UnityEngine;
+using BlockPuzzle.Grid;
 
 namespace BlockPuzzle.Blocks
 {
@@ -11,7 +12,12 @@ namespace BlockPuzzle.Blocks
 
         [Header("References")]
         [SerializeField] private BlockView blockViewPrefab;
-        [SerializeField] private RectTransform[] slots = new RectTransform[3];
+        [SerializeField]
+        private RectTransform[] slots =
+            new RectTransform[3];
+
+        [SerializeField] private RectTransform dragLayer;
+        [SerializeField] private GridManager gridManager;
 
         private readonly List<BlockView> activeBlocks = new();
 
@@ -20,21 +26,14 @@ namespace BlockPuzzle.Blocks
             SpawnThreeBlocks();
         }
 
-        private void Update()
-        {
-            if (Input.GetKeyDown(KeyCode.R))
-            {
-                SpawnThreeBlocks();
-            }
-        }
-
         public void SpawnThreeBlocks()
         {
             if (blockViewPrefab == null ||
+                gridManager == null ||
+                dragLayer == null ||
                 slots == null ||
                 slots.Length != 3 ||
-                blockLibrary == null ||
-                blockLibrary.Count == 0)
+                blockLibrary == null)
             {
                 Debug.LogError("[BlockSpawner] Missing references.");
                 return;
@@ -70,13 +69,13 @@ namespace BlockPuzzle.Blocks
                 BlockDefinition selected =
                     validBlocks[Random.Range(0, validBlocks.Count)];
 
-                BlockView view = Instantiate(
+                BlockView block = Instantiate(
                     blockViewPrefab,
                     slots[i]
                 );
 
                 RectTransform rect =
-                    view.GetComponent<RectTransform>();
+                    block.GetComponent<RectTransform>();
 
                 rect.anchorMin = Vector2.one * 0.5f;
                 rect.anchorMax = Vector2.one * 0.5f;
@@ -84,22 +83,45 @@ namespace BlockPuzzle.Blocks
                 rect.anchoredPosition = Vector2.zero;
                 rect.localScale = Vector3.one;
 
-                view.Initialize(selected);
-                activeBlocks.Add(view);
+                block.Initialize(selected);
+
+                BlockDragHandler drag =
+                    block.GetComponent<BlockDragHandler>();
+
+                if (drag != null)
+                {
+                    drag.Initialize(
+                        gridManager,
+                        this,
+                        dragLayer
+                    );
+                }
+
+                activeBlocks.Add(block);
             }
 
             Debug.Log("[BlockSpawner] Three blocks spawned.");
+        }
+
+        public void NotifyBlockUsed(BlockView block)
+        {
+            activeBlocks.Remove(block);
+
+            if (activeBlocks.Count == 0)
+            {
+                SpawnThreeBlocks();
+            }
         }
 
         private void ClearActiveBlocks()
         {
             foreach (BlockView block in activeBlocks)
             {
-                if (block == null)
-                    continue;
-
-                block.gameObject.SetActive(false);
-                Destroy(block.gameObject);
+                if (block != null)
+                {
+                    block.gameObject.SetActive(false);
+                    Destroy(block.gameObject);
+                }
             }
 
             activeBlocks.Clear();
