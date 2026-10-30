@@ -18,7 +18,7 @@ namespace BlockPuzzle.Blocks
 
         public BlockDefinition Definition { get; private set; }
         public RectTransform RectTransform => rectTransform;
-
+        public float CellStep => cellSize + spacing;
         private void Awake()
         {
             rectTransform = GetComponent<RectTransform>();

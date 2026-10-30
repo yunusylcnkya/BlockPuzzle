@@ -1,4 +1,5 @@
 
+using System;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
@@ -11,6 +12,7 @@ namespace BlockPuzzle.Grid
         [Header("Grid Settings")]
         [SerializeField, Min(1)] private int rows = 8;
         [SerializeField, Min(1)] private int columns = 8;
+        [SerializeField, Min(0)] private float spacing = 4f;
 
         [Header("References")]
         [SerializeField] private RectTransform gridRoot;
@@ -18,13 +20,22 @@ namespace BlockPuzzle.Grid
 
         private GridCell[,] cells;
         private GridCellView[,] cellViews;
-
         private GridLayoutGroup gridLayout;
 
         private readonly List<Vector2Int> previewCells = new();
 
+        private Vector2 lastGridSize;
+
+        // Other systems can subscribe to line clears.
+        public event Action<LineClearResult> LinesCleared;
+
         public int Rows => rows;
         public int Columns => columns;
+
+        public float CellStep =>
+            gridLayout == null
+                ? 0f
+                : gridLayout.cellSize.x + gridLayout.spacing.x;
 
         private void Awake()
         {
@@ -37,16 +48,84 @@ namespace BlockPuzzle.Grid
             GenerateGrid();
         }
 
+        private void LateUpdate()
+        {
+            if (gridRoot == null || gridLayout == null)
+                return;
+
+            if ((gridRoot.rect.size - lastGridSize)
+                .sqrMagnitude > 0.01f)
+            {
+                ConfigureGridLayout();
+            }
+        }
+
+        private void ConfigureGridLayout()
+        {
+            float availableWidth =
+                gridRoot.rect.width -
+                gridLayout.padding.horizontal;
+
+            float availableHeight =
+                gridRoot.rect.height -
+                gridLayout.padding.vertical;
+
+            float cellWidth =
+                (availableWidth - (columns - 1) * spacing)
+                / columns;
+
+            float cellHeight =
+                (availableHeight - (rows - 1) * spacing)
+                / rows;
+
+            float cellSize = Mathf.Max(
+                1f,
+                Mathf.Min(cellWidth, cellHeight)
+            );
+
+            gridLayout.cellSize =
+                new Vector2(cellSize, cellSize);
+
+            gridLayout.spacing =
+                new Vector2(spacing, spacing);
+
+            gridLayout.startCorner =
+                GridLayoutGroup.Corner.UpperLeft;
+
+            gridLayout.startAxis =
+                GridLayoutGroup.Axis.Horizontal;
+
+            gridLayout.childAlignment =
+                TextAnchor.MiddleCenter;
+
+            gridLayout.constraint =
+                GridLayoutGroup.Constraint.FixedColumnCount;
+
+            gridLayout.constraintCount = columns;
+
+            lastGridSize = gridRoot.rect.size;
+
+            LayoutRebuilder.ForceRebuildLayoutImmediate(
+                gridRoot
+            );
+        }
+
         public void GenerateGrid()
         {
-            if (gridRoot == null || cellPrefab == null || gridLayout == null)
+            if (gridRoot == null ||
+                cellPrefab == null ||
+                gridLayout == null)
             {
-                Debug.LogError("[GridManager] Missing references.");
+                Debug.LogError(
+                    "[GridManager] Missing references."
+                );
                 return;
             }
 
             if (cells != null)
                 return;
+
+            ConfigureGridLayout();
 
             cells = new GridCell[rows, columns];
             cellViews = new GridCellView[rows, columns];
@@ -56,7 +135,10 @@ namespace BlockPuzzle.Grid
                 for (int column = 0; column < columns; column++)
                 {
                     GridCell cell = new GridCell(row, column);
-                    GridCellView view = Instantiate(cellPrefab, gridRoot);
+
+                    GridCellView view = Instantiate(
+                        cellPrefab, gridRoot
+                    );
 
                     view.name = $"Cell_{row}_{column}";
                     view.Initialize(cell);
@@ -66,7 +148,13 @@ namespace BlockPuzzle.Grid
                 }
             }
 
-            Debug.Log($"[GridManager] Generated {rows}x{columns} grid.");
+            LayoutRebuilder.ForceRebuildLayoutImmediate(
+                gridRoot
+            );
+
+            Debug.Log(
+                $"[GridManager] Generated {rows}x{columns} grid."
+            );
         }
 
         public bool IsInsideGrid(int row, int column)
@@ -83,7 +171,8 @@ namespace BlockPuzzle.Grid
             return cells[row, column];
         }
 
-        public bool TryOccupyCell(int row, int column, int blockId)
+        public bool TryOccupyCell(
+            int row, int column, int blockId)
         {
             GridCell cell = GetCell(row, column);
 
@@ -103,74 +192,99 @@ namespace BlockPuzzle.Grid
 
             cell.Clear();
             cellViews[row, column].Refresh();
+
             return true;
         }
 
-        public bool TryGetCellFromScreenPosition(
+        public bool TryGetPlacementFromScreenPosition(
+            BlockDefinition definition,
             Vector2 screenPosition,
             Camera uiCamera,
-            out int row,
-            out int column)
+            out int bottomRow,
+            out int leftColumn)
         {
-            row = -1;
-            column = -1;
+            bottomRow = -1;
+            leftColumn = -1;
 
-            if (gridRoot == null || gridLayout == null)
+            if (cells == null ||
+                definition == null ||
+                !definition.IsValid())
+            {
                 return false;
+            }
+
+            if (!RectTransformUtility.RectangleContainsScreenPoint(
+                gridRoot, screenPosition, uiCamera))
+            {
+                return false;
+            }
 
             if (!RectTransformUtility.ScreenPointToLocalPointInRectangle(
-                gridRoot, screenPosition, uiCamera, out Vector2 local))
+                gridRoot,
+                screenPosition,
+                uiCamera,
+                out Vector2 localPoint))
+            {
+                return false;
+            }
+
+            Vector3 firstCellWorld =
+                cellViews[0, 0].transform.position;
+
+            Vector3 firstCellLocal =
+                gridRoot.InverseTransformPoint(firstCellWorld);
+
+            float step = CellStep;
+
+            if (step <= 0f)
                 return false;
 
-            Rect rect = gridRoot.rect;
+            float centerColumn =
+                (localPoint.x - firstCellLocal.x) / step;
 
-            float x = local.x - rect.xMin;
-            float y = rect.yMax - local.y;
+            float centerRow =
+                (firstCellLocal.y - localPoint.y) / step;
 
-            float stepX = gridLayout.cellSize.x + gridLayout.spacing.x;
-            float stepY = gridLayout.cellSize.y + gridLayout.spacing.y;
+            leftColumn = Mathf.RoundToInt(
+                centerColumn -
+                (definition.Width - 1) * 0.5f
+            );
 
-            if (stepX <= 0 || stepY <= 0)
-                return false;
+            bottomRow = Mathf.RoundToInt(
+                centerRow +
+                (definition.Height - 1) * 0.5f
+            );
 
-            float contentWidth =
-                columns * gridLayout.cellSize.x +
-                (columns - 1) * gridLayout.spacing.x;
+            return true;
+        }
 
-            float contentHeight =
-                rows * gridLayout.cellSize.y +
-                (rows - 1) * gridLayout.spacing.y;
+        public Vector3 GetPlacementCenterWorld(
+            BlockDefinition definition,
+            int bottomRow,
+            int leftColumn)
+        {
+            Vector3 firstCellLocal =
+                gridRoot.InverseTransformPoint(
+                    cellViews[0, 0].transform.position
+                );
 
-            float availableWidth = rect.width -
-                gridLayout.padding.left - gridLayout.padding.right;
+            float step = CellStep;
 
-            float availableHeight = rect.height -
-                gridLayout.padding.top - gridLayout.padding.bottom;
+            float centerColumn =
+                leftColumn +
+                (definition.Width - 1) * 0.5f;
 
-            float startX = gridLayout.padding.left +
-                (availableWidth - contentWidth) * 0.5f;
+            float centerRow =
+                bottomRow -
+                (definition.Height - 1) * 0.5f;
 
-            float startY = gridLayout.padding.top +
-                (availableHeight - contentHeight) * 0.5f;
+            Vector3 localPosition = new Vector3(
+                firstCellLocal.x + centerColumn * step,
+                firstCellLocal.y - centerRow * step,
+                0f
+            );
 
-            float gridX = x - startX;
-            float gridY = y - startY;
-
-            if (gridX < 0 || gridY < 0 ||
-                gridX >= contentWidth || gridY >= contentHeight)
-                return false;
-
-            column = Mathf.FloorToInt(gridX / stepX);
-            row = Mathf.FloorToInt(gridY / stepY);
-
-            if (!IsInsideGrid(row, column))
-                return false;
-
-            float withinX = gridX - column * stepX;
-            float withinY = gridY - row * stepY;
-
-            return withinX < gridLayout.cellSize.x &&
-                   withinY < gridLayout.cellSize.y;
+            return gridRoot.TransformPoint(localPosition);
         }
 
         public bool CanPlaceBlock(
@@ -201,8 +315,12 @@ namespace BlockPuzzle.Grid
             int leftColumn,
             int blockId)
         {
-            if (!CanPlaceBlock(definition, bottomRow, leftColumn))
+            // Validate the entire shape before changing data.
+            if (!CanPlaceBlock(
+                definition, bottomRow, leftColumn))
+            {
                 return false;
+            }
 
             ClearPreview();
 
@@ -211,10 +329,114 @@ namespace BlockPuzzle.Grid
                 int row = bottomRow - offset.y;
                 int column = leftColumn + offset.x;
 
+                // Safe because CanPlaceBlock has passed.
                 TryOccupyCell(row, column, blockId);
             }
 
+            // Automatically detect and clear completed lines.
+            LineClearResult result = ResolveCompletedLines();
+
+            if (result.HasClearedLines)
+            {
+                Debug.Log(
+                    "[GridManager] Lines cleared: " +
+                    $"Rows={result.ClearedRowCount}, " +
+                    $"Columns={result.ClearedColumnCount}, " +
+                    $"Cells={result.ClearedCellCount}"
+                );
+            }
+
             return true;
+        }
+
+        private LineClearResult ResolveCompletedLines()
+        {
+            List<int> completedRows = new();
+            List<int> completedColumns = new();
+
+            // STEP 1: Scan every row.
+            for (int row = 0; row < rows; row++)
+            {
+                bool complete = true;
+
+                for (int column = 0; column < columns; column++)
+                {
+                    if (!cells[row, column].IsOccupied)
+                    {
+                        complete = false;
+                        break;
+                    }
+                }
+
+                if (complete)
+                    completedRows.Add(row);
+            }
+
+            // STEP 2: Scan every column before clearing.
+            for (int column = 0; column < columns; column++)
+            {
+                bool complete = true;
+
+                for (int row = 0; row < rows; row++)
+                {
+                    if (!cells[row, column].IsOccupied)
+                    {
+                        complete = false;
+                        break;
+                    }
+                }
+
+                if (complete)
+                    completedColumns.Add(column);
+            }
+
+            // STEP 3: Build a unique collection.
+            HashSet<Vector2Int> cellsToClear = new();
+
+            foreach (int row in completedRows)
+            {
+                for (int column = 0; column < columns; column++)
+                {
+                    cellsToClear.Add(new Vector2Int(row, column));
+                }
+            }
+
+            foreach (int column in completedColumns)
+            {
+                for (int row = 0; row < rows; row++)
+                {
+                    cellsToClear.Add(new Vector2Int(row, column));
+                }
+            }
+
+            // STEP 4: Clear every selected cell once.
+            List<Vector2Int> cleared = new(cellsToClear);
+
+            cleared.Sort((a, b) =>
+            {
+                int rowComparison = a.x.CompareTo(b.x);
+
+                return rowComparison != 0
+                    ? rowComparison
+                    : a.y.CompareTo(b.y);
+            });
+
+            foreach (Vector2Int position in cleared)
+            {
+                ClearCell(position.x, position.y);
+            }
+
+            LineClearResult result = new LineClearResult(
+                completedRows.Count,
+                completedColumns.Count,
+                cleared
+            );
+
+            // STEP 5: Notify future score and FX systems.
+            if (result.HasClearedLines)
+                LinesCleared?.Invoke(result);
+
+            return result;
         }
 
         public void ShowPlacementPreview(
@@ -228,7 +450,8 @@ namespace BlockPuzzle.Grid
                 return;
 
             bool valid = CanPlaceBlock(
-                definition, bottomRow, leftColumn);
+                definition, bottomRow, leftColumn
+            );
 
             foreach (Vector2Int offset in definition.Cells)
             {
@@ -239,7 +462,10 @@ namespace BlockPuzzle.Grid
                     continue;
 
                 cellViews[row, column].ShowPreview(valid);
-                previewCells.Add(new Vector2Int(row, column));
+
+                previewCells.Add(
+                    new Vector2Int(row, column)
+                );
             }
         }
 
@@ -254,6 +480,49 @@ namespace BlockPuzzle.Grid
             }
 
             previewCells.Clear();
+        }
+
+        // Editor-only manual test. Not used in normal gameplay.
+        [ContextMenu("DEBUG/Test Row And Column Clear")]
+        private void DebugTestRowAndColumnClear()
+        {
+            if (!Application.isPlaying || cells == null)
+            {
+                Debug.LogWarning(
+                    "[GridManager] Run this test in Play mode."
+                );
+                return;
+            }
+
+            // Start with an empty board.
+            ClearPreview();
+
+            for (int row = 0; row < rows; row++)
+            {
+                for (int column = 0; column < columns; column++)
+                {
+                    ClearCell(row, column);
+                }
+            }
+
+            // Fill row 3 and column 4 for an 8x8 grid.
+            int testRow = Mathf.Min(3, rows - 1);
+            int testColumn = Mathf.Min(4, columns - 1);
+
+            for (int column = 0; column < columns; column++)
+                TryOccupyCell(testRow, column, 9001);
+
+            for (int row = 0; row < rows; row++)
+                TryOccupyCell(row, testColumn, 9001);
+
+            LineClearResult result = ResolveCompletedLines();
+
+            Debug.Log(
+                "[GridManager] DEBUG Result: " +
+                $"Rows={result.ClearedRowCount}, " +
+                $"Columns={result.ClearedColumnCount}, " +
+                $"Cells={result.ClearedCellCount}"
+            );
         }
     }
 }

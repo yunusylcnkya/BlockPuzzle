@@ -14,7 +14,13 @@ namespace BlockPuzzle.Blocks
         IEndDragHandler
     {
         [Header("Drag Settings")]
-        [SerializeField] private float fingerOffset = 140f;
+        [SerializeField, Range(0f, 0.2f)]
+        private float fingerOffsetRatio = 0.075f;
+
+        [SerializeField, Range(0.2f, 1f)]
+        private float dragAlpha = 0.70f;
+
+        private static int nextBlockId = 1;
 
         private BlockView blockView;
         private GridManager gridManager;
@@ -22,11 +28,15 @@ namespace BlockPuzzle.Blocks
 
         private RectTransform rect;
         private RectTransform dragLayer;
+
         private Transform originalParent;
         private int originalSiblingIndex;
-        private static int nextBlockId = 1;
+
+        private CanvasGroup canvasGroup;
+
         private bool isDragging;
         private bool hasTarget;
+
         private int targetRow;
         private int targetColumn;
 
@@ -36,8 +46,13 @@ namespace BlockPuzzle.Blocks
             rect = GetComponent<RectTransform>();
 
             Image image = GetComponent<Image>();
-            image.color = new Color(1, 1, 1, 0);
+            image.color = new Color(1f, 1f, 1f, 0f);
             image.raycastTarget = true;
+
+            canvasGroup = GetComponent<CanvasGroup>();
+
+            if (canvasGroup == null)
+                canvasGroup = gameObject.AddComponent<CanvasGroup>();
         }
 
         public void Initialize(
@@ -52,16 +67,34 @@ namespace BlockPuzzle.Blocks
 
         public void OnBeginDrag(PointerEventData eventData)
         {
-            if (gridManager == null || dragLayer == null ||
+            if (gridManager == null ||
+                blockSpawner == null ||
+                dragLayer == null ||
                 blockView.Definition == null)
+            {
+                Debug.LogWarning(
+                    "[BlockDrag] Missing references."
+                );
                 return;
+            }
 
             isDragging = true;
+            hasTarget = false;
+
             originalParent = transform.parent;
             originalSiblingIndex = transform.GetSiblingIndex();
 
-            transform.SetParent(dragLayer, true);
+            transform.SetParent(dragLayer, false);
             transform.SetAsLastSibling();
+
+            // Match the grid cell spacing while dragging.
+            float scale = gridManager.CellStep /
+                Mathf.Max(1f, blockView.CellStep);
+
+            rect.localScale = Vector3.one * scale;
+
+            canvasGroup.alpha = dragAlpha;
+            canvasGroup.blocksRaycasts = false;
 
             UpdateDragPosition(eventData);
         }
@@ -74,11 +107,13 @@ namespace BlockPuzzle.Blocks
             UpdateDragPosition(eventData);
         }
 
-
         public void OnEndDrag(PointerEventData eventData)
         {
             if (!isDragging)
                 return;
+
+            // Recalculate one final time at finger release.
+            UpdateDragPosition(eventData);
 
             isDragging = false;
 
@@ -96,9 +131,7 @@ namespace BlockPuzzle.Blocks
                 );
 
                 if (placed)
-                {
                     nextBlockId++;
-                }
             }
 
             if (placed)
@@ -110,48 +143,79 @@ namespace BlockPuzzle.Blocks
             {
                 transform.SetParent(originalParent, false);
                 transform.SetSiblingIndex(originalSiblingIndex);
+
+                rect.localScale = Vector3.one;
+
                 blockView.ResetPosition();
+
+                canvasGroup.alpha = 1f;
+                canvasGroup.blocksRaycasts = true;
             }
 
             hasTarget = false;
         }
 
-
-        private void UpdateDragPosition(PointerEventData eventData)
+        private void UpdateDragPosition(
+            PointerEventData eventData)
         {
-            Camera camera = eventData.pressEventCamera;
+            Camera uiCamera = eventData.pressEventCamera;
 
-            Vector2 screenPoint = eventData.position +
-                Vector2.up * fingerOffset;
+            // Relative to actual device screen height.
+            float offsetPixels =
+                Screen.height * fingerOffsetRatio;
 
-            if (RectTransformUtility.ScreenPointToLocalPointInRectangle(
-                dragLayer,
-                screenPoint,
-                camera,
-                out Vector2 localPoint))
+            Vector2 targetScreenPoint =
+                eventData.position +
+                Vector2.up * offsetPixels;
+
+            // Default: follow the finger.
+            if (RectTransformUtility
+                .ScreenPointToLocalPointInRectangle(
+                    dragLayer,
+                    targetScreenPoint,
+                    uiCamera,
+                    out Vector2 fingerLocal))
             {
-                rect.anchoredPosition = localPoint;
+                rect.anchoredPosition = fingerLocal;
             }
 
             gridManager.ClearPreview();
+
             hasTarget = false;
 
-            if (gridManager.TryGetCellFromScreenPosition(
-                screenPoint,
-                camera,
+            if (!gridManager.TryGetPlacementFromScreenPosition(
+                blockView.Definition,
+                targetScreenPoint,
+                uiCamera,
                 out int row,
                 out int column))
             {
-                targetRow = row;
-                targetColumn = column;
-                hasTarget = true;
+                return;
+            }
 
-                gridManager.ShowPlacementPreview(
+            targetRow = row;
+            targetColumn = column;
+            hasTarget = true;
+
+            gridManager.ShowPlacementPreview(
+                blockView.Definition,
+                targetRow,
+                targetColumn
+            );
+
+            // Snap the complete shape to the grid.
+            Vector3 worldCenter =
+                gridManager.GetPlacementCenterWorld(
                     blockView.Definition,
                     targetRow,
                     targetColumn
                 );
-            }
+
+            Vector3 localCenter =
+                dragLayer.InverseTransformPoint(worldCenter);
+
+            rect.anchoredPosition =
+                new Vector2(localCenter.x, localCenter.y);
         }
     }
 }
