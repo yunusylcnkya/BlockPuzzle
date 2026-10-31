@@ -311,6 +311,59 @@ namespace BlockPuzzle.Grid
         }
 
 
+        public bool HasAnyValidPlacement(BlockDefinition definition)
+        {
+            if (cells == null ||
+                definition == null ||
+                !definition.IsValid())
+            {
+                return false;
+            }
+
+            // Minimum bounding box must fit on the board.
+            if (definition.Width > columns ||
+                definition.Height > rows)
+            {
+                return false;
+            }
+
+            // bottomRow is the bottommost occupied bounding row.
+            for (int bottomRow = definition.Height - 1;
+                 bottomRow < rows;
+                 bottomRow++)
+            {
+                for (int leftColumn = 0;
+                     leftColumn <= columns - definition.Width;
+                     leftColumn++)
+                {
+                    if (CanPlaceBlock(
+                        definition,
+                        bottomRow,
+                        leftColumn))
+                    {
+                        return true;
+                    }
+                }
+            }
+
+            return false;
+        }
+
+        public bool HasAnyValidPlacement(
+            IReadOnlyList<BlockDefinition> definitions)
+        {
+            if (definitions == null)
+                return false;
+
+            foreach (BlockDefinition definition in definitions)
+            {
+                if (HasAnyValidPlacement(definition))
+                    return true;
+            }
+
+            return false;
+        }
+
         public bool TryPlaceBlock(
             BlockDefinition definition,
             int bottomRow,

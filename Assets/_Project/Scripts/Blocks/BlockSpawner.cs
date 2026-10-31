@@ -1,4 +1,5 @@
 
+using System;
 using System.Collections.Generic;
 using UnityEngine;
 using BlockPuzzle.Grid;
@@ -8,10 +9,12 @@ namespace BlockPuzzle.Blocks
     public sealed class BlockSpawner : MonoBehaviour
     {
         [Header("Block Library")]
-        [SerializeField] private List<BlockDefinition> blockLibrary;
+        [SerializeField]
+        private List<BlockDefinition> blockLibrary = new();
 
         [Header("References")]
         [SerializeField] private BlockView blockViewPrefab;
+
         [SerializeField]
         private RectTransform[] slots =
             new RectTransform[3];
@@ -20,6 +23,10 @@ namespace BlockPuzzle.Blocks
         [SerializeField] private GridManager gridManager;
 
         private readonly List<BlockView> activeBlocks = new();
+
+        public IReadOnlyList<BlockView> ActiveBlocks => activeBlocks;
+
+        public event Action TrayChanged;
 
         private void Start()
         {
@@ -35,7 +42,9 @@ namespace BlockPuzzle.Blocks
                 slots.Length != 3 ||
                 blockLibrary == null)
             {
-                Debug.LogError("[BlockSpawner] Missing references.");
+                Debug.LogError(
+                    "[BlockSpawner] Missing references."
+                );
                 return;
             }
 
@@ -43,7 +52,9 @@ namespace BlockPuzzle.Blocks
             {
                 if (slot == null)
                 {
-                    Debug.LogError("[BlockSpawner] Missing slot.");
+                    Debug.LogError(
+                        "[BlockSpawner] Missing slot."
+                    );
                     return;
                 }
             }
@@ -58,7 +69,9 @@ namespace BlockPuzzle.Blocks
 
             if (validBlocks.Count == 0)
             {
-                Debug.LogError("[BlockSpawner] No valid blocks.");
+                Debug.LogError(
+                    "[BlockSpawner] No valid blocks."
+                );
                 return;
             }
 
@@ -67,7 +80,11 @@ namespace BlockPuzzle.Blocks
             for (int i = 0; i < 3; i++)
             {
                 BlockDefinition selected =
-                    validBlocks[Random.Range(0, validBlocks.Count)];
+                    validBlocks[
+                        UnityEngine.Random.Range(
+                            0, validBlocks.Count
+                        )
+                    ];
 
                 BlockView block = Instantiate(
                     blockViewPrefab,
@@ -96,20 +113,39 @@ namespace BlockPuzzle.Blocks
                         dragLayer
                     );
                 }
+                else
+                {
+                    Debug.LogError(
+                        "[BlockSpawner] BlockDragHandler missing."
+                    );
+                }
 
                 activeBlocks.Add(block);
             }
 
-            Debug.Log("[BlockSpawner] Three blocks spawned.");
+            Debug.Log(
+                "[BlockSpawner] Three blocks spawned."
+            );
+
+            TrayChanged?.Invoke();
         }
 
         public void NotifyBlockUsed(BlockView block)
         {
-            activeBlocks.Remove(block);
+            if (block == null)
+                return;
+
+            if (!activeBlocks.Remove(block))
+                return;
 
             if (activeBlocks.Count == 0)
             {
+                // Notify only after the next group exists.
                 SpawnThreeBlocks();
+            }
+            else
+            {
+                TrayChanged?.Invoke();
             }
         }
 
