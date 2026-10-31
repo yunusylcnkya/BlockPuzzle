@@ -28,6 +28,7 @@ namespace BlockPuzzle.Grid
 
         // Other systems can subscribe to line clears.
         public event Action<LineClearResult> LinesCleared;
+        public event Action<BlockPlacementResult> BlockPlaced;
 
         public int Rows => rows;
         public int Columns => columns;
@@ -309,13 +310,13 @@ namespace BlockPuzzle.Grid
             return true;
         }
 
+
         public bool TryPlaceBlock(
             BlockDefinition definition,
             int bottomRow,
             int leftColumn,
             int blockId)
         {
-            // Validate the entire shape before changing data.
             if (!CanPlaceBlock(
                 definition, bottomRow, leftColumn))
             {
@@ -329,25 +330,33 @@ namespace BlockPuzzle.Grid
                 int row = bottomRow - offset.y;
                 int column = leftColumn + offset.x;
 
-                // Safe because CanPlaceBlock has passed.
                 TryOccupyCell(row, column, blockId);
             }
 
-            // Automatically detect and clear completed lines.
-            LineClearResult result = ResolveCompletedLines();
+            LineClearResult lineResult = ResolveCompletedLines();
 
-            if (result.HasClearedLines)
+            if (lineResult.HasClearedLines)
             {
                 Debug.Log(
                     "[GridManager] Lines cleared: " +
-                    $"Rows={result.ClearedRowCount}, " +
-                    $"Columns={result.ClearedColumnCount}, " +
-                    $"Cells={result.ClearedCellCount}"
+                    $"Rows={lineResult.ClearedRowCount}, " +
+                    $"Columns={lineResult.ClearedColumnCount}, " +
+                    $"Cells={lineResult.ClearedCellCount}"
                 );
             }
 
+            BlockPlacementResult placementResult =
+                new BlockPlacementResult(
+                    definition.Cells.Count,
+                    blockId,
+                    lineResult
+                );
+
+            BlockPlaced?.Invoke(placementResult);
+
             return true;
         }
+
 
         private LineClearResult ResolveCompletedLines()
         {
