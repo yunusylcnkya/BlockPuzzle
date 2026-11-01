@@ -22,6 +22,10 @@ namespace BlockPuzzle.Classic
         [SerializeField] private TMP_Text finalScoreText;
         [SerializeField] private TMP_Text bestScoreText;
 
+        [Header("Feedback")]
+        [SerializeField] private GameFeedbackController feedbackController;
+
+
         private bool isGameOver;
         private Coroutine pendingCheck;
 
@@ -171,6 +175,10 @@ namespace BlockPuzzle.Classic
 
             gameOverPanel.SetActive(true);
 
+            if (feedbackController != null)
+            {
+                feedbackController.PlayGameOver();
+            }
             Debug.Log(
                 $"[ClassicGame] GAME OVER. Score={scoreManager.CurrentScore}"
             );
