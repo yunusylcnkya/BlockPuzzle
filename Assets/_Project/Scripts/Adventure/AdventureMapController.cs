@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using TMPro;
 using UnityEngine;
 using UnityEngine.SceneManagement;
+using BlockPuzzle.SaveSystem;
 
 namespace BlockPuzzle.Adventure
 {
@@ -21,7 +22,8 @@ namespace BlockPuzzle.Adventure
 
         [SerializeField]
         private TMP_Text progressText;
-
+        [SerializeField]
+        private TMP_Text totalCoinsText;
         private readonly List<AdventureLevelButton> buttons = new();
 
         private void Start()
@@ -60,6 +62,12 @@ namespace BlockPuzzle.Adventure
             {
                 progressText.text =
                     $"LEVEL {highestUnlocked} UNLOCKED";
+            }
+
+            if (totalCoinsText != null)
+            {
+                totalCoinsText.text =
+                    $"COINS: {AdventureSaveService.TotalCoins:N0}";
             }
 
             // Explicit ordering, independent of asset list order.

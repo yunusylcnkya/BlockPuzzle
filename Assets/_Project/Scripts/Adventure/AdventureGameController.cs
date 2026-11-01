@@ -8,6 +8,7 @@ using BlockPuzzle.Blocks;
 using BlockPuzzle.Core;
 using BlockPuzzle.Gameplay;
 using BlockPuzzle.Grid;
+using BlockPuzzle.SaveSystem;
 
 namespace BlockPuzzle.Adventure
 {
@@ -38,6 +39,11 @@ namespace BlockPuzzle.Adventure
 
         [SerializeField] private GameObject nextLevelButton;
         [SerializeField] private GameObject retryButton;
+
+        [Header("Save Result UI")]
+        [SerializeField] private TMP_Text resultStarsText;
+        [SerializeField] private TMP_Text resultCoinsText;
+        [SerializeField] private TMP_Text resultBestText;
 
         private AdventureLevelDefinition currentLevel;
         private int movesUsed;
@@ -310,6 +316,7 @@ namespace BlockPuzzle.Adventure
             }
         }
 
+
         private void CompleteLevel()
         {
             if (gameFinished)
@@ -317,13 +324,39 @@ namespace BlockPuzzle.Adventure
 
             gameFinished = true;
 
-            // Unlock only after the goal is actually reached.
-            int nextLevelId = currentLevel.LevelId + 1;
+            AdventureCompletionResult completion =
+                AdventureSaveService.CompleteLevel(
+                    currentLevel.LevelId,
+                    scoreManager.CurrentScore,
+                    movesUsed,
+                    currentLevel.MoveLimit
+                );
 
-            if (catalog.ContainsLevel(nextLevelId))
-                AdventureProgress.UnlockNextLevel(
+            AdventureLevelRecord record =
+                AdventureSaveService.GetLevelRecord(
                     currentLevel.LevelId
                 );
+
+            if (resultStarsText != null)
+            {
+                resultStarsText.text =
+                    GetStarDisplay(completion.EarnedStars);
+            }
+
+            if (resultCoinsText != null)
+            {
+                resultCoinsText.text =
+                    completion.CoinsEarned > 0
+                        ? $"+{completion.CoinsEarned} COINS"
+                        : "REWARD ALREADY CLAIMED";
+            }
+
+            if (resultBestText != null)
+            {
+                resultBestText.text =
+                    $"BEST SCORE: {record.bestScore:N0}\n" +
+                    $"BEST MOVES: {record.bestMoves}";
+            }
 
             ShowResult(
                 true,
@@ -332,8 +365,19 @@ namespace BlockPuzzle.Adventure
             );
 
             Debug.Log(
-                $"[Adventure] Level {currentLevel.LevelId} completed."
+                $"[Adventure] Level {currentLevel.LevelId} completed. " +
+                $"Stars: {completion.EarnedStars}, " +
+                $"Coins: +{completion.CoinsEarned}"
             );
+        }
+
+
+        private string GetStarDisplay(int stars)
+        {
+            stars = Mathf.Clamp(stars, 0, 3);
+
+            return new string('★', stars) +
+                   new string('☆', 3 - stars);
         }
 
         private void FailLevel(string reason)
@@ -342,6 +386,15 @@ namespace BlockPuzzle.Adventure
                 return;
 
             gameFinished = true;
+
+            if (resultStarsText != null)
+                resultStarsText.text = string.Empty;
+
+            if (resultCoinsText != null)
+                resultCoinsText.text = string.Empty;
+
+            if (resultBestText != null)
+                resultBestText.text = string.Empty;
 
             ShowResult(
                 false,

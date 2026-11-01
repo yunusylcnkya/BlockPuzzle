@@ -3,6 +3,7 @@ using System;
 using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
+using BlockPuzzle.SaveSystem;
 
 namespace BlockPuzzle.Adventure
 {
@@ -13,11 +14,16 @@ namespace BlockPuzzle.Adventure
         [Header("References")]
         [SerializeField] private TMP_Text numberText;
         [SerializeField] private GameObject lockText;
+        [SerializeField] private TMP_Text starsText;
 
         [Header("Colors")]
         [SerializeField]
         private Color unlockedColor =
             new Color32(243, 183, 70, 255);
+
+        [SerializeField]
+        private Color completedColor =
+            new Color32(73, 183, 143, 255);
 
         [SerializeField]
         private Color lockedColor =
@@ -51,6 +57,11 @@ namespace BlockPuzzle.Adventure
             if (background == null)
                 background = GetComponent<Image>();
 
+            AdventureLevelRecord record =
+                AdventureSaveService.GetLevelRecord(levelId);
+
+            bool completed = record.completed;
+
             if (numberText != null)
             {
                 numberText.text = levelId.ToString();
@@ -60,16 +71,36 @@ namespace BlockPuzzle.Adventure
             if (lockText != null)
                 lockText.SetActive(!unlocked);
 
-            background.color = unlocked
-                ? unlockedColor
-                : lockedColor;
+            if (starsText != null)
+            {
+                starsText.gameObject.SetActive(completed);
+
+                if (completed)
+                {
+                    int stars = Mathf.Clamp(
+                        record.bestStars, 0, 3
+                    );
+
+                    starsText.text =
+                        new string('★', stars) +
+                        new string('☆', 3 - stars);
+                }
+            }
+
+            background.color = !unlocked
+                ? lockedColor
+                : completed
+                    ? completedColor
+                    : unlockedColor;
 
             button.interactable = unlocked;
 
             button.onClick.RemoveAllListeners();
 
             if (unlocked)
+            {
                 button.onClick.AddListener(HandleClick);
+            }
         }
 
         private void HandleClick()
