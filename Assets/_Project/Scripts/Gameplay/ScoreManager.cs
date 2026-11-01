@@ -11,8 +11,9 @@ namespace BlockPuzzle.Gameplay
         [SerializeField] private GridManager gridManager;
         [SerializeField] private ScoreRules scoreRules;
 
-        private const string BestScoreKey =
-            "BlockPuzzle.Classic.BestScore";
+        [Header("Save Settings")]
+        [SerializeField]
+        private string bestScoreKey = "BlockPuzzle.Classic.BestScore";
 
         public int CurrentScore { get; private set; }
         public int BestScore { get; private set; }
@@ -25,7 +26,7 @@ namespace BlockPuzzle.Gameplay
 
         private void Awake()
         {
-            BestScore = PlayerPrefs.GetInt(BestScoreKey, 0);
+            BestScore = PlayerPrefs.GetInt(bestScoreKey, 0);
         }
 
         private void OnEnable()
@@ -97,7 +98,7 @@ namespace BlockPuzzle.Gameplay
                 BestScore = CurrentScore;
 
                 PlayerPrefs.SetInt(
-                    BestScoreKey,
+                    bestScoreKey,
                     BestScore
                 );
 

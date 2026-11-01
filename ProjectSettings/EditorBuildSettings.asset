@@ -22,6 +22,6 @@ EditorBuildSettings:
     guid: a1960289312b4f74684398d46aed82db
   - enabled: 1
     path: Assets/_Project/Scenes/AdventureGame.unity
-    guid: b64e60f883918cc4ea9f71c52b4e8614
+    guid: 6679c22efaaec6546bc0815b717f7bb8
   m_configObjects:
     com.unity.input.settings.actions: {fileID: -944628639613478452, guid: 2bcd2660ca9b64942af0de543d8d7100, type: 3}
