@@ -14,43 +14,47 @@ namespace BlockPuzzle.Grid
         private float maxHeightRatio = 0.50f;
 
         private RectTransform boardRect;
-        private RectTransform canvasRect;
+        private RectTransform parentRect;
 
-        private Vector2 lastCanvasSize;
+        private Vector2 lastParentSize;
 
         private void Awake()
         {
             boardRect = GetComponent<RectTransform>();
+            parentRect = transform.parent as RectTransform;
 
-            Canvas canvas = GetComponentInParent<Canvas>();
-
-            if (canvas == null)
+            if (parentRect == null)
             {
-                Debug.LogError("[BoardLayout] Canvas missing.");
+                Debug.LogError(
+                    "[ResponsiveBoardLayout] Parent RectTransform missing."
+                );
+
                 enabled = false;
-                return;
             }
+        }
 
-            canvasRect = canvas.rootCanvas
-                .GetComponent<RectTransform>();
-
+        private void Start()
+        {
             ApplyLayout();
         }
 
         private void LateUpdate()
         {
-            if (canvasRect == null)
+            if (parentRect == null)
                 return;
 
-            Vector2 size = canvasRect.rect.size;
+            Vector2 currentSize = parentRect.rect.size;
 
-            if ((size - lastCanvasSize).sqrMagnitude > 0.01f)
+            if ((currentSize - lastParentSize).sqrMagnitude > 0.01f)
                 ApplyLayout();
         }
 
         private void ApplyLayout()
         {
-            Vector2 size = canvasRect.rect.size;
+            if (parentRect == null)
+                return;
+
+            Vector2 size = parentRect.rect.size;
 
             float boardSize = Mathf.Min(
                 size.x * widthRatio,
@@ -67,7 +71,7 @@ namespace BlockPuzzle.Grid
                 boardSize
             );
 
-            lastCanvasSize = size;
+            lastParentSize = size;
         }
     }
 }

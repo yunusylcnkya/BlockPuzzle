@@ -59,15 +59,15 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: UnityEngine.UI::UnityEngine.UI.Image
   m_Material: {fileID: 0}
-  m_Color: {r: 0.20784314, g: 0.25882354, b: 0.3882353, a: 1}
+  m_Color: {r: 0.16862746, g: 0.2627451, b: 0.40784314, a: 1}
   m_RaycastTarget: 0
   m_RaycastPadding: {x: 0, y: 0, z: 0, w: 0}
   m_Maskable: 1
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_Sprite: {fileID: 0}
-  m_Type: 0
+  m_Sprite: {fileID: 21300000, guid: 62a7081fbe47b644fbdaf744e67cc9fe, type: 3}
+  m_Type: 1
   m_PreserveAspect: 0
   m_FillCenter: 1
   m_FillMethod: 4
@@ -88,5 +88,9 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: da91ea531edeea44ab3c4512f4bef721, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::BlockPuzzle.Grid.GridCellView
-  emptyColor: {r: 0.20784314, g: 0.25882354, b: 0.3882353, a: 1}
-  occupiedColor: {r: 0.15686275, g: 0.74509805, b: 0.92156863, a: 1}
+  emptyColor: {r: 0.16862746, g: 0.2627451, b: 0.40784314, a: 1}
+  defaultOccupiedColor: {r: 0.28235295, g: 0.78039217, b: 0.9098039, a: 1}
+  validPreviewColor: {r: 0.32156864, g: 0.83137256, b: 0.6117647, a: 1}
+  invalidPreviewColor: {r: 0.9411765, g: 0.42352942, b: 0.4745098, a: 1}
+  clearFlashColor: {r: 1, g: 0.9254902, b: 0.60784316, a: 1}
+  flashDuration: 0.3

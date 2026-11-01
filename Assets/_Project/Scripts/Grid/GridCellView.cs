@@ -1,4 +1,5 @@
 
+using System.Collections;
 using UnityEngine;
 using UnityEngine.UI;
 
@@ -10,22 +11,35 @@ namespace BlockPuzzle.Grid
         [Header("Colors")]
         [SerializeField]
         private Color emptyColor =
-            new Color32(53, 66, 99, 255);
+            new Color32(43, 67, 104, 255);
 
         [SerializeField]
-        private Color occupiedColor =
-            new Color32(40, 190, 235, 255);
+        private Color defaultOccupiedColor =
+            new Color32(72, 199, 232, 255);
 
         [SerializeField]
         private Color validPreviewColor =
-            new Color32(70, 205, 135, 255);
+            new Color32(82, 212, 156, 255);
 
         [SerializeField]
         private Color invalidPreviewColor =
-            new Color32(235, 80, 90, 255);
+            new Color32(240, 108, 121, 255);
+
+        [Header("Clear Effect")]
+        [SerializeField]
+        private Color clearFlashColor =
+            new Color32(255, 238, 160, 255);
+
+        [SerializeField, Min(0.01f)]
+        private float flashDuration = 0.25f;
 
         private Image cellImage;
         private GridCell cell;
+
+        private Color placedBlockColor;
+        private bool hasPlacedColor;
+
+        private Coroutine flashRoutine;
 
         public GridCell Cell => cell;
 
@@ -38,19 +52,51 @@ namespace BlockPuzzle.Grid
         public void Initialize(GridCell gridCell)
         {
             cell = gridCell;
+            hasPlacedColor = false;
+
+            Refresh();
+        }
+
+        public void SetOccupiedColor(Color color)
+        {
+            placedBlockColor = color;
+            hasPlacedColor = true;
+
+            Refresh();
+        }
+
+        public void ResetOccupiedColor()
+        {
+            hasPlacedColor = false;
+
             Refresh();
         }
 
         public void Refresh()
         {
-            if (cell == null)
-                return;
-
             EnsureImage();
 
-            cellImage.color = cell.IsOccupied
-                ? occupiedColor
-                : emptyColor;
+            if (flashRoutine != null)
+            {
+                StopCoroutine(flashRoutine);
+                flashRoutine = null;
+            }
+
+            if (cell == null)
+            {
+                cellImage.color = emptyColor;
+                return;
+            }
+
+            if (!cell.IsOccupied)
+            {
+                cellImage.color = emptyColor;
+                return;
+            }
+
+            cellImage.color = hasPlacedColor
+                ? placedBlockColor
+                : defaultOccupiedColor;
         }
 
         public void ShowPreview(bool isValid)
@@ -60,6 +106,43 @@ namespace BlockPuzzle.Grid
             cellImage.color = isValid
                 ? validPreviewColor
                 : invalidPreviewColor;
+        }
+
+        public void PlayClearFlash()
+        {
+            EnsureImage();
+
+            if (flashRoutine != null)
+                StopCoroutine(flashRoutine);
+
+            flashRoutine = StartCoroutine(
+                AnimateClearFlash()
+            );
+        }
+
+        private IEnumerator AnimateClearFlash()
+        {
+            float elapsed = 0f;
+
+            while (elapsed < flashDuration)
+            {
+                elapsed += Time.unscaledDeltaTime;
+
+                float t = Mathf.Clamp01(
+                    elapsed / flashDuration
+                );
+
+                cellImage.color = Color.Lerp(
+                    clearFlashColor,
+                    emptyColor,
+                    t
+                );
+
+                yield return null;
+            }
+
+            cellImage.color = emptyColor;
+            flashRoutine = null;
         }
 
         private void EnsureImage()

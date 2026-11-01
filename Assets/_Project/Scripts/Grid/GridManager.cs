@@ -172,8 +172,11 @@ namespace BlockPuzzle.Grid
             return cells[row, column];
         }
 
+
         public bool TryOccupyCell(
-            int row, int column, int blockId)
+            int row,
+            int column,
+            int blockId)
         {
             GridCell cell = GetCell(row, column);
 
@@ -184,6 +187,27 @@ namespace BlockPuzzle.Grid
             return true;
         }
 
+        // Overload: stores the visual color of the block.
+        public bool TryOccupyCell(
+            int row,
+            int column,
+            int blockId,
+            Color blockColor)
+        {
+            GridCell cell = GetCell(row, column);
+
+            if (cell == null || !cell.TryOccupy(blockId))
+                return false;
+
+            cellViews[row, column].SetOccupiedColor(
+                blockColor
+            );
+
+            return true;
+        }
+
+
+
         public bool ClearCell(int row, int column)
         {
             GridCell cell = GetCell(row, column);
@@ -192,10 +216,13 @@ namespace BlockPuzzle.Grid
                 return false;
 
             cell.Clear();
-            cellViews[row, column].Refresh();
+
+            // Also clear the block's visual color.
+            cellViews[row, column].ResetOccupiedColor();
 
             return true;
         }
+
 
         public bool TryGetPlacementFromScreenPosition(
             BlockDefinition definition,
@@ -349,8 +376,28 @@ namespace BlockPuzzle.Grid
             return false;
         }
 
-        public bool HasAnyValidPlacement(
-            IReadOnlyList<BlockDefinition> definitions)
+        private void PlayLineClearAnimation(
+            LineClearResult result)
+        {
+            if (result == null ||
+                !result.HasClearedLines)
+            {
+                return;
+            }
+
+            foreach (Vector2Int position in result.ClearedCells)
+            {
+                int row = position.x;
+                int column = position.y;
+
+                if (!IsInsideGrid(row, column))
+                    continue;
+
+                cellViews[row, column].PlayClearFlash();
+            }
+        }
+
+        public bool HasAnyValidPlacement(IReadOnlyList<BlockDefinition> definitions)
         {
             if (definitions == null)
                 return false;
@@ -364,8 +411,7 @@ namespace BlockPuzzle.Grid
             return false;
         }
 
-        public bool TryPlaceBlock(
-            BlockDefinition definition,
+        public bool TryPlaceBlock(BlockDefinition definition,
             int bottomRow,
             int leftColumn,
             int blockId)
@@ -383,7 +429,7 @@ namespace BlockPuzzle.Grid
                 int row = bottomRow - offset.y;
                 int column = leftColumn + offset.x;
 
-                TryOccupyCell(row, column, blockId);
+                TryOccupyCell(row, column, blockId, definition.BlockColor);
             }
 
             LineClearResult lineResult = ResolveCompletedLines();
@@ -496,8 +542,11 @@ namespace BlockPuzzle.Grid
 
             // STEP 5: Notify future score and FX systems.
             if (result.HasClearedLines)
-                LinesCleared?.Invoke(result);
+            {
+                PlayLineClearAnimation(result);
 
+                LinesCleared?.Invoke(result);
+            }
             return result;
         }
 
@@ -587,4 +636,8 @@ namespace BlockPuzzle.Grid
             );
         }
     }
+
+
+
+
 }
