@@ -4,6 +4,7 @@ using GoogleMobileAds;
 using GoogleMobileAds.Api;
 using GoogleMobileAds.Common;
 using GoogleMobileAds.Ump.Api;
+using BlockPuzzle.SaveSystem;
 using UnityEngine;
 
 namespace BlockPuzzle.Monetization
@@ -25,6 +26,37 @@ namespace BlockPuzzle.Monetization
 
         [SerializeField, Min(0f)]
         private float minimumSecondsBetweenAds = 120f;
+
+        [Header("Rewarded Ads")]
+        [SerializeField] private string androidRewardedId = "";
+
+        [SerializeField, Min(1)]
+        private int rewardedCoinAmount = 50;
+
+        private const string AndroidTestRewardedId =
+            "ca-app-pub-3940256099942544/5224354917";
+
+        private RewardedAd rewardedAd;
+
+        private bool loadingRewarded;
+        private bool showingRewarded;
+        private bool rewardGrantedForCurrentAd;
+
+        // Prevent an interstitial from opening during a reward ad.
+        public bool IsFullScreenAdShowing =>
+            showingAd || showingRewarded;
+
+        public bool IsRewardedReady =>
+            sdkInitialized &&
+            !loadingRewarded &&
+            !IsFullScreenAdShowing &&
+            rewardedAd != null &&
+            rewardedAd.CanShowAd();
+
+        public int RewardedCoinAmount => rewardedCoinAmount;
+
+        public event Action RewardedStateChanged;
+        public event Action<int> RewardedCoinsGranted;
 
         private InterstitialAd interstitialAd;
         private bool sdkInitialized;
@@ -157,6 +189,212 @@ namespace BlockPuzzle.Monetization
         }
 
 
+        private string GetRewardedId()
+        {
+            if (useTestAds)
+                return AndroidTestRewardedId;
+
+            return androidRewardedId == null
+                ? string.Empty
+                : androidRewardedId.Trim();
+        }
+
+        private void LoadRewarded()
+        {
+            if (!sdkInitialized ||
+                loadingRewarded ||
+                showingRewarded ||
+                rewardedAd != null)
+            {
+                return;
+            }
+
+            if (!ConsentInformation.CanRequestAds())
+                return;
+
+            string adUnitId = GetRewardedId();
+
+            if (string.IsNullOrWhiteSpace(adUnitId))
+            {
+                Debug.LogWarning(
+                    "[AdMob Rewarded] Ad Unit ID is empty."
+                );
+                return;
+            }
+
+            loadingRewarded = true;
+            RewardedStateChanged?.Invoke();
+
+            Debug.Log("[AdMob Rewarded] Loading...");
+
+            RewardedAd.Load(
+                adUnitId,
+                new AdRequest(),
+                (ad, error) =>
+                {
+                    MobileAdsEventExecutor.ExecuteInUpdate(() =>
+                    {
+                        loadingRewarded = false;
+
+                        if (this == null)
+                        {
+                            ad?.Destroy();
+                            return;
+                        }
+
+                        if (error != null || ad == null)
+                        {
+                            ad?.Destroy();
+
+                            Debug.LogWarning(
+                                "[AdMob Rewarded] Load failed: " +
+                                error
+                            );
+
+                            RewardedStateChanged?.Invoke();
+                            return;
+                        }
+
+                        rewardedAd = ad;
+
+                        RegisterRewardedEvents(ad);
+
+                        Debug.Log(
+                            "[AdMob Rewarded] Loaded successfully."
+                        );
+
+                        RewardedStateChanged?.Invoke();
+                    });
+                });
+        }
+
+        private void RegisterRewardedEvents(RewardedAd ad)
+        {
+            ad.OnAdFullScreenContentOpened += () =>
+            {
+                MobileAdsEventExecutor.ExecuteInUpdate(() =>
+                {
+                    if (this == null)
+                        return;
+
+                    Debug.Log("[AdMob Rewarded] Opened.");
+                });
+            };
+
+            ad.OnAdFullScreenContentClosed += () =>
+            {
+                MobileAdsEventExecutor.ExecuteInUpdate(() =>
+                {
+                    if (this == null)
+                        return;
+
+                    if (rewardedAd != ad)
+                        return;
+
+                    Debug.Log(
+                        "[AdMob Rewarded] Closed. Reward granted: " +
+                        rewardGrantedForCurrentAd
+                    );
+
+                    FinishRewardedAd();
+                });
+            };
+
+            ad.OnAdFullScreenContentFailed += error =>
+            {
+                MobileAdsEventExecutor.ExecuteInUpdate(() =>
+                {
+                    if (this == null)
+                        return;
+
+                    if (rewardedAd != ad)
+                        return;
+
+                    Debug.LogWarning(
+                        "[AdMob Rewarded] Show failed: " + error
+                    );
+
+                    FinishRewardedAd();
+                });
+            };
+        }
+
+
+        public bool ShowRewardedForCoins()
+        {
+#if UNITY_EDITOR
+            Debug.Log(
+                "[AdMob Rewarded] Android device required."
+            );
+            return false;
+#else
+    if (!IsRewardedReady)
+    {
+        Debug.LogWarning(
+            "[AdMob Rewarded] Ad is not ready."
+        );
+        return false;
+    }
+
+    RewardedAd currentAd = rewardedAd;
+
+    showingRewarded = true;
+    rewardGrantedForCurrentAd = false;
+
+    RewardedStateChanged?.Invoke();
+
+    // This variable belongs to this specific ad showing.
+    int rewardProcessed = 0;
+
+    try
+    {
+        currentAd.Show(reward =>
+        {
+            // Deduplicate before dispatching to Unity.
+            if (System.Threading.Interlocked.Exchange(
+                    ref rewardProcessed, 1) != 0)
+            {
+                return;
+            }
+
+            MobileAdsEventExecutor.ExecuteInUpdate(() =>
+            {
+                if (this == null)
+                    return;
+
+                rewardGrantedForCurrentAd = true;
+
+                int coins = rewardedCoinAmount;
+
+                AdventureSaveService.AddRewardedCoins(
+                    coins
+                );
+
+                Debug.Log(
+                    "[AdMob Rewarded] Reward granted: +" +
+                    coins
+                );
+
+                RewardedCoinsGranted?.Invoke(coins);
+            });
+        });
+
+        return true;
+    }
+    catch (Exception exception)
+    {
+        Debug.LogError(
+            "[AdMob Rewarded] Show failed: " +
+            exception.Message
+        );
+
+        FinishRewardedAd();
+        return false;
+    }
+#endif
+        }
+
+
         private void TryInitializeAds()
         {
             if (sdkInitialized || sdkInitializing)
@@ -211,10 +449,30 @@ namespace BlockPuzzle.Monetization
                     Debug.Log("[AdMob] SDK Initialized: True");
 
                     LoadInterstitial();
+                    LoadRewarded();
                 });
             });
         }
 
+
+        private void FinishRewardedAd()
+        {
+            showingRewarded = false;
+
+            if (rewardedAd != null)
+            {
+                rewardedAd.Destroy();
+                rewardedAd = null;
+            }
+
+            RewardedStateChanged?.Invoke();
+
+            if (sdkInitialized &&
+                ConsentInformation.CanRequestAds())
+            {
+                LoadRewarded();
+            }
+        }
 
         private string GetInterstitialId()
         {
@@ -311,7 +569,7 @@ namespace BlockPuzzle.Monetization
             if (continuation == null)
                 return;
 
-            if (showingAd)
+            if (IsFullScreenAdShowing)
             {
                 Debug.LogWarning(
                     "[AdMob DEBUG] An ad is already showing."
@@ -331,8 +589,9 @@ namespace BlockPuzzle.Monetization
                 elapsed >= minimumSecondsBetweenAds;
 
             bool adReady =
-                interstitialAd != null &&
-                interstitialAd.CanShowAd();
+     !showingRewarded &&
+     interstitialAd != null &&
+     interstitialAd.CanShowAd();
 
             Debug.Log(
                 "[AdMob DEBUG] Transition requested\n" +
@@ -445,6 +704,12 @@ namespace BlockPuzzle.Monetization
 
             DestroyInterstitial();
             pendingContinuation = null;
+
+            if (rewardedAd != null)
+            {
+                rewardedAd.Destroy();
+                rewardedAd = null;
+            }
         }
     }
 }

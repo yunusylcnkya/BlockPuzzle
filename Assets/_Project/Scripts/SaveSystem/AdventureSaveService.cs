@@ -25,6 +25,38 @@ namespace BlockPuzzle.SaveSystem
             }
         }
 
+        public static void AddRewardedCoins(int amount)
+        {
+            EnsureLoaded();
+
+            if (amount <= 0)
+            {
+                Debug.LogWarning(
+                    "[SaveSystem] Invalid rewarded coin amount."
+                );
+                return;
+            }
+
+            if (cachedData.totalCoins > int.MaxValue - amount)
+            {
+                Debug.LogError(
+                    "[SaveSystem] Coin balance limit reached."
+                );
+                return;
+            }
+
+            cachedData.totalCoins += amount;
+
+            // Existing Save() persists the same v1.0 JSON data
+            // and invokes DataChanged.
+            Save();
+
+            Debug.Log(
+                $"[SaveSystem] Rewarded coins saved. " +
+                $"Amount: +{amount}, Total: {cachedData.totalCoins}"
+            );
+        }
+
         public static int TotalCoins
         {
             get
