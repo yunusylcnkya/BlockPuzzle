@@ -7,6 +7,7 @@ using BlockPuzzle.Blocks;
 using BlockPuzzle.Core;
 using BlockPuzzle.Gameplay;
 using BlockPuzzle.Grid;
+using BlockPuzzle.Monetization;
 
 namespace BlockPuzzle.Classic
 {
@@ -184,7 +185,7 @@ namespace BlockPuzzle.Classic
             );
         }
 
-        public void RestartGame()
+        private void RestartGameImmediate()
         {
             if (GameManager.Instance != null)
             {
@@ -199,7 +200,20 @@ namespace BlockPuzzle.Classic
             }
         }
 
-        public void ReturnToMainMenu()
+        public void RestartGame()
+        {
+            if (AdMobManager.Instance == null)
+            {
+                RestartGameImmediate();
+                return;
+            }
+
+            AdMobManager.Instance.RunAtTransition(
+                RestartGameImmediate
+            );
+        }
+
+        private void ReturnToMainMenuImmediate()
         {
             if (GameManager.Instance != null)
             {
@@ -212,6 +226,19 @@ namespace BlockPuzzle.Classic
                 UnityEngine.SceneManagement.SceneManager
                     .LoadScene("MainMenu");
             }
+        }
+
+        public void ReturnToMainMenu()
+        {
+            if (AdMobManager.Instance == null)
+            {
+                ReturnToMainMenuImmediate();
+                return;
+            }
+
+            AdMobManager.Instance.RunAtTransition(
+                ReturnToMainMenuImmediate
+            );
         }
 
         [ContextMenu("DEBUG/Check Available Moves")]

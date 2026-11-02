@@ -1,0 +1,450 @@
+
+using System;
+using GoogleMobileAds;
+using GoogleMobileAds.Api;
+using GoogleMobileAds.Common;
+using GoogleMobileAds.Ump.Api;
+using UnityEngine;
+
+namespace BlockPuzzle.Monetization
+{
+    public sealed class AdMobManager : MonoBehaviour
+    {
+        public static AdMobManager Instance { get; private set; }
+
+        private const string AndroidTestInterstitialId =
+            "ca-app-pub-3940256099942544/1033173712";
+
+        [Header("Ad Configuration")]
+        [SerializeField] private bool useTestAds = true;
+
+        [SerializeField] private string androidInterstitialId = "";
+
+        [Header("Frequency Rules")]
+        [SerializeField, Min(1)] private int transitionsPerAd = 3;
+
+        [SerializeField, Min(0f)]
+        private float minimumSecondsBetweenAds = 120f;
+
+        private InterstitialAd interstitialAd;
+        private bool sdkInitialized;
+        private bool sdkInitializing;
+        private bool loadingAd;
+        private bool showingAd;
+
+        private int transitionCount;
+        private float lastAdTime = -100000f;
+
+        private Action pendingContinuation;
+
+        public bool CanShowPrivacyOptions =>
+            ConsentInformation.PrivacyOptionsRequirementStatus ==
+            PrivacyOptionsRequirementStatus.Required;
+
+        private void Awake()
+        {
+            if (Instance != null && Instance != this)
+            {
+                Destroy(gameObject);
+                return;
+            }
+
+            Instance = this;
+            DontDestroyOnLoad(gameObject);
+        }
+
+
+        private void Start()
+        {
+#if UNITY_ANDROID && !UNITY_EDITOR
+    Debug.Log("[AdMob] Android startup.");
+
+    // Previously obtained consent may already allow requests.
+    if (ConsentInformation.CanRequestAds())
+    {
+        Debug.Log(
+            "[AdMob] Existing consent permits ad requests."
+        );
+
+        TryInitializeAds();
+    }
+
+    // Still refresh consent on every app launch.
+    RequestConsent();
+#else
+            Debug.Log("[AdMob] Editor mode.");
+#endif
+        }
+
+
+
+        private void RequestConsent()
+        {
+            Debug.Log("[AdMob] Starting UMP consent update.");
+
+            ConsentRequestParameters parameters =
+                new ConsentRequestParameters();
+
+            ConsentInformation.Update(
+                parameters,
+                error =>
+                {
+                    MobileAdsEventExecutor.ExecuteInUpdate(() =>
+                    {
+                        if (this == null)
+                            return;
+
+                        if (error != null)
+                        {
+                            Debug.LogWarning(
+                                "[AdMob] UMP update failed: " +
+                                error.Message
+                            );
+
+                            Debug.Log(
+                                "[AdMob] CanRequestAds after error: " +
+                                ConsentInformation.CanRequestAds()
+                            );
+
+                            TryInitializeAds();
+                            return;
+                        }
+
+                        Debug.Log(
+                            "[AdMob] UMP update succeeded."
+                        );
+
+                        Debug.Log(
+                            "[AdMob] CanRequestAds: " +
+                            ConsentInformation.CanRequestAds()
+                        );
+
+                        // Consent might already be sufficient.
+                        TryInitializeAds();
+
+                        ConsentForm.LoadAndShowConsentFormIfRequired(
+                            formError =>
+                            {
+                                MobileAdsEventExecutor.ExecuteInUpdate(() =>
+                                {
+                                    if (this == null)
+                                        return;
+
+                                    if (formError != null)
+                                    {
+                                        Debug.LogWarning(
+                                            "[AdMob] UMP form error: " +
+                                            formError.Message
+                                        );
+                                    }
+                                    else
+                                    {
+                                        Debug.Log(
+                                            "[AdMob] UMP form flow completed."
+                                        );
+                                    }
+
+                                    Debug.Log(
+                                        "[AdMob] CanRequestAds after form: " +
+                                        ConsentInformation.CanRequestAds()
+                                    );
+
+                                    TryInitializeAds();
+                                });
+                            });
+                    });
+                });
+        }
+
+
+        private void TryInitializeAds()
+        {
+            if (sdkInitialized || sdkInitializing)
+                return;
+
+            bool canRequest =
+                ConsentInformation.CanRequestAds();
+
+            Debug.Log(
+                "[AdMob] TryInitializeAds. CanRequestAds: " +
+                canRequest
+            );
+
+            if (!canRequest)
+            {
+                Debug.LogWarning(
+                    "[AdMob] Initialization deferred: consent not ready."
+                );
+                return;
+            }
+
+            sdkInitializing = true;
+
+            Debug.Log("[AdMob] Calling MobileAds.Initialize.");
+
+            MobileAds.Initialize(status =>
+            {
+                Debug.Log(
+                    "[AdMob] MobileAds.Initialize callback received."
+                );
+
+                MobileAdsEventExecutor.ExecuteInUpdate(() =>
+                {
+                    if (this == null)
+                        return;
+
+                    sdkInitializing = false;
+
+                    if (status == null)
+                    {
+                        sdkInitialized = false;
+
+                        Debug.LogError(
+                            "[AdMob] SDK returned null initialization status."
+                        );
+
+                        return;
+                    }
+
+                    sdkInitialized = true;
+
+                    Debug.Log("[AdMob] SDK Initialized: True");
+
+                    LoadInterstitial();
+                });
+            });
+        }
+
+
+        private string GetInterstitialId()
+        {
+            if (useTestAds)
+                return AndroidTestInterstitialId;
+
+            return androidInterstitialId.Trim();
+        }
+
+        private void LoadInterstitial()
+        {
+            if (!sdkInitialized || loadingAd ||
+                showingAd || interstitialAd != null)
+                return;
+
+            string adUnitId = GetInterstitialId();
+
+            if (string.IsNullOrWhiteSpace(adUnitId))
+            {
+                Debug.LogWarning(
+                    "[AdMob] Interstitial ID is empty."
+                );
+                return;
+            }
+
+            loadingAd = true;
+
+            InterstitialAd.Load(
+                adUnitId,
+                new AdRequest(),
+                (ad, error) =>
+                {
+                    MobileAdsEventExecutor.ExecuteInUpdate(() =>
+                    {
+                        loadingAd = false;
+
+                        if (this == null)
+                        {
+                            ad?.Destroy();
+                            return;
+                        }
+
+                        if (error != null || ad == null)
+                        {
+                            ad?.Destroy();
+
+                            Debug.LogWarning(
+                                "[AdMob] Interstitial load failed: " +
+                                (error == null ? "Unknown" : error.ToString())
+                            );
+
+                            // Do not retry continuously on errors.
+                            return;
+                        }
+
+                        interstitialAd = ad;
+
+                        RegisterInterstitialEvents(ad);
+
+                        Debug.Log(
+                            "[AdMob] Interstitial loaded."
+                        );
+                    });
+                });
+        }
+
+        private void RegisterInterstitialEvents(
+            InterstitialAd ad)
+        {
+            ad.OnAdFullScreenContentClosed += () =>
+            {
+                MobileAdsEventExecutor.ExecuteInUpdate(() =>
+                {
+                    FinishAdAndContinue();
+                });
+            };
+
+            ad.OnAdFullScreenContentFailed += error =>
+            {
+                MobileAdsEventExecutor.ExecuteInUpdate(() =>
+                {
+                    Debug.LogWarning(
+                        "[AdMob] Ad display failed: " + error
+                    );
+
+                    FinishAdAndContinue();
+                });
+            };
+        }
+
+
+        public void RunAtTransition(Action continuation)
+        {
+            if (continuation == null)
+                return;
+
+            if (showingAd)
+            {
+                Debug.LogWarning(
+                    "[AdMob DEBUG] An ad is already showing."
+                );
+                return;
+            }
+
+            transitionCount++;
+
+            bool frequencyReached =
+                transitionCount >= transitionsPerAd;
+
+            float elapsed =
+                Time.realtimeSinceStartup - lastAdTime;
+
+            bool cooldownFinished =
+                elapsed >= minimumSecondsBetweenAds;
+
+            bool adReady =
+                interstitialAd != null &&
+                interstitialAd.CanShowAd();
+
+            Debug.Log(
+                "[AdMob DEBUG] Transition requested\n" +
+                $"SDK Initialized: {sdkInitialized}\n" +
+                $"Consent CanRequestAds: " +
+                $"{ConsentInformation.CanRequestAds()}\n" +
+                $"Loading Ad: {loadingAd}\n" +
+                $"Ad Ready: {adReady}\n" +
+                $"Transition Count: {transitionCount}\n" +
+                $"Required Count: {transitionsPerAd}\n" +
+                $"Frequency Reached: {frequencyReached}\n" +
+                $"Cooldown Finished: {cooldownFinished}"
+            );
+
+            if (!sdkInitialized ||
+                !frequencyReached ||
+                !cooldownFinished ||
+                !adReady)
+            {
+                Debug.Log(
+                    "[AdMob DEBUG] Skipping ad, continuing game."
+                );
+
+                continuation();
+                return;
+            }
+
+            transitionCount = 0;
+            lastAdTime = Time.realtimeSinceStartup;
+            showingAd = true;
+            pendingContinuation = continuation;
+
+            Debug.Log("[AdMob DEBUG] Showing interstitial.");
+
+            try
+            {
+                interstitialAd.Show();
+            }
+            catch (Exception exception)
+            {
+                Debug.LogError(
+                    "[AdMob DEBUG] Show failed: " +
+                    exception.Message
+                );
+
+                FinishAdAndContinue();
+            }
+        }
+
+
+        private void FinishAdAndContinue()
+        {
+            if (!showingAd)
+                return;
+
+            showingAd = false;
+
+            DestroyInterstitial();
+
+            Action continuation = pendingContinuation;
+            pendingContinuation = null;
+
+            // Reload for a future opportunity, not the current one.
+            LoadInterstitial();
+
+            continuation?.Invoke();
+        }
+
+        private void DestroyInterstitial()
+        {
+            if (interstitialAd == null)
+                return;
+
+            interstitialAd.Destroy();
+            interstitialAd = null;
+        }
+
+        public void ShowPrivacyOptions()
+        {
+            if (!CanShowPrivacyOptions)
+                return;
+
+            ConsentForm.ShowPrivacyOptionsForm(error =>
+            {
+                MobileAdsEventExecutor.ExecuteInUpdate(() =>
+                {
+                    if (this == null)
+                        return;
+
+                    if (error != null)
+                    {
+                        Debug.LogWarning(
+                            "[AdMob] Privacy options: " +
+                            error.Message
+                        );
+                    }
+
+                    if (ConsentInformation.CanRequestAds())
+                        TryInitializeAds();
+                    else
+                        DestroyInterstitial();
+                });
+            });
+        }
+
+        private void OnDestroy()
+        {
+            if (Instance == this)
+                Instance = null;
+
+            DestroyInterstitial();
+            pendingContinuation = null;
+        }
+    }
+}

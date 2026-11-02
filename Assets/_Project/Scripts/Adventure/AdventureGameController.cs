@@ -9,6 +9,7 @@ using BlockPuzzle.Core;
 using BlockPuzzle.Gameplay;
 using BlockPuzzle.Grid;
 using BlockPuzzle.SaveSystem;
+using BlockPuzzle.Monetization;
 
 namespace BlockPuzzle.Adventure
 {
@@ -89,7 +90,7 @@ namespace BlockPuzzle.Adventure
                     "[Adventure] Invalid selected level."
                 );
 
-                ReturnToMap();
+                ReturnToMapImmediate();
                 return;
             }
 
@@ -101,7 +102,7 @@ namespace BlockPuzzle.Adventure
                     $"[Adventure] Level {levelId} not found."
                 );
 
-                ReturnToMap();
+                ReturnToMapImmediate();
                 return;
             }
 
@@ -453,7 +454,7 @@ namespace BlockPuzzle.Adventure
             resultPanel.SetActive(true);
         }
 
-        public void RestartLevel()
+        private void RestartLevelImmediate()
         {
             if (currentLevel == null)
                 return;
@@ -465,7 +466,12 @@ namespace BlockPuzzle.Adventure
             SceneManager.LoadScene("AdventureGame");
         }
 
-        public void NextLevel()
+        public void RestartLevel()
+        {
+            RunAdTransition(RestartLevelImmediate);
+        }
+
+        private void NextLevelImmediate()
         {
             if (currentLevel == null || !gameFinished)
                 return;
@@ -475,7 +481,7 @@ namespace BlockPuzzle.Adventure
             if (!catalog.ContainsLevel(nextLevel) ||
                 !AdventureProgress.IsUnlocked(nextLevel))
             {
-                ReturnToMap();
+                ReturnToMapImmediate();
                 return;
             }
 
@@ -483,10 +489,41 @@ namespace BlockPuzzle.Adventure
             SceneManager.LoadScene("AdventureGame");
         }
 
-        public void ReturnToMap()
+        public void NextLevel()
+        {
+            RunAdTransition(NextLevelImmediate);
+        }
+
+        private void ReturnToMapImmediate()
         {
             AdventureSession.Clear();
             SceneManager.LoadScene("AdventureMap");
         }
+
+
+        public void ReturnToMap()
+        {
+            // ReturnToMap is also used for validation failures.
+            // Do not show ads when a level never started.
+            if (!gameFinished)
+            {
+                ReturnToMapImmediate();
+                return;
+            }
+
+            RunAdTransition(ReturnToMapImmediate);
+        }
+
+        private void RunAdTransition(System.Action transition)
+        {
+            if (AdMobManager.Instance == null)
+            {
+                transition?.Invoke();
+                return;
+            }
+
+            AdMobManager.Instance.RunAtTransition(transition);
+        }
+
     }
 }
