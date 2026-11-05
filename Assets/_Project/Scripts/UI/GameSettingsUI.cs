@@ -16,7 +16,9 @@ namespace BlockPuzzle.UI
         [SerializeField] private Slider volumeSlider;
         [SerializeField] private Toggle hapticsToggle;
         [SerializeField] private TMP_Text volumeValueText;
-
+        [SerializeField] private Toggle musicToggle;
+        [SerializeField] private Slider musicVolumeSlider;
+        [SerializeField] private TMP_Text musicVolumeText;
         private void Awake()
         {
             if (settingsPanel != null)
@@ -45,6 +47,11 @@ namespace BlockPuzzle.UI
                     SetHapticsEnabled
                 );
             }
+            if (musicToggle != null)
+                musicToggle.onValueChanged.AddListener(SetMusicEnabled);
+
+            if (musicVolumeSlider != null)
+                musicVolumeSlider.onValueChanged.AddListener(SetMusicVolume);
         }
 
         private void OnDisable()
@@ -69,6 +76,12 @@ namespace BlockPuzzle.UI
                     SetHapticsEnabled
                 );
             }
+
+            if (musicToggle != null)
+                musicToggle.onValueChanged.RemoveListener(SetMusicEnabled);
+
+            if (musicVolumeSlider != null)
+                musicVolumeSlider.onValueChanged.RemoveListener(SetMusicVolume);
         }
 
         public void OpenSettings()
@@ -107,8 +120,45 @@ namespace BlockPuzzle.UI
                     GameFeedbackSettings.HapticsEnabled
                 );
             }
+            if (musicToggle != null)
+            {
+                musicToggle.SetIsOnWithoutNotify(
+                    BackgroundMusicController.MusicEnabled
+                );
+            }
 
+            if (musicVolumeSlider != null)
+            {
+                musicVolumeSlider.SetValueWithoutNotify(
+                    BackgroundMusicController.MusicVolume
+                );
+            }
+
+            RefreshMusicVolumeText();
             UpdateVolumeLabel();
+        }
+
+        public void SetMusicEnabled(bool enabled)
+        {
+            BackgroundMusicController.MusicEnabled = enabled;
+        }
+
+        public void SetMusicVolume(float value)
+        {
+            BackgroundMusicController.MusicVolume = value;
+            RefreshMusicVolumeText();
+        }
+
+        private void RefreshMusicVolumeText()
+        {
+            if (musicVolumeText == null)
+                return;
+
+            int percent = Mathf.RoundToInt(
+                BackgroundMusicController.MusicVolume * 100f
+            );
+
+            musicVolumeText.text = $"{percent}%";
         }
 
         public void SetSoundEnabled(bool enabled)

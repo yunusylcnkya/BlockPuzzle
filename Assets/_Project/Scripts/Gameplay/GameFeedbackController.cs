@@ -17,6 +17,22 @@ namespace BlockPuzzle.Gameplay
         [SerializeField] private AudioClip comboClip;
         [SerializeField] private AudioClip gameOverClip;
 
+        [Header("SFX Balance")]
+        [SerializeField, Range(0f, 1f)]
+        private float placeVolume = 0.40f;
+
+        [SerializeField, Range(0f, 1f)]
+        private float lineClearVolume = 0.65f;
+
+        [SerializeField, Range(0f, 1f)]
+        private float multiLineVolume = 0.75f;
+
+        [SerializeField, Range(0f, 1f)]
+        private float comboVolume = 0.55f;
+
+        [SerializeField, Range(0f, 1f)]
+        private float gameOverVolume = 0.65f;
+
         private AudioSource audioSource;
 
         private bool gameEnded;
@@ -93,6 +109,7 @@ namespace BlockPuzzle.Gameplay
             TryVibrate();
         }
 
+
         private void PlayClip(AudioClip clip)
         {
             if (!GameFeedbackSettings.SoundEnabled)
@@ -101,17 +118,28 @@ namespace BlockPuzzle.Gameplay
             if (clip == null || audioSource == null)
                 return;
 
-            float volume =
-                GameFeedbackSettings.SfxVolume;
+            float balance = 1f;
 
-            if (volume <= 0f)
+            if (clip == placeClip)
+                balance = placeVolume;
+            else if (clip == lineClearClip)
+                balance = lineClearVolume;
+            else if (clip == multiLineClip)
+                balance = multiLineVolume;
+            else if (clip == comboClip)
+                balance = comboVolume;
+            else if (clip == gameOverClip)
+                balance = gameOverVolume;
+
+            float finalVolume =
+                GameFeedbackSettings.SfxVolume * balance;
+
+            if (finalVolume <= 0f)
                 return;
 
-            audioSource.PlayOneShot(
-                clip,
-                volume
-            );
+            audioSource.PlayOneShot(clip, finalVolume);
         }
+
 
         private void TryVibrate()
         {

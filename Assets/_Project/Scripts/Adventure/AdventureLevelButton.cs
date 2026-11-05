@@ -4,6 +4,7 @@ using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
 using BlockPuzzle.SaveSystem;
+using BlockPuzzle.UI;
 
 namespace BlockPuzzle.Adventure
 {
@@ -13,8 +14,13 @@ namespace BlockPuzzle.Adventure
     {
         [Header("References")]
         [SerializeField] private TMP_Text numberText;
+
+        // The object that contains the lock icon.
+        // Kept under the old field name for Inspector compatibility.
         [SerializeField] private GameObject lockText;
-        [SerializeField] private TMP_Text starsText;
+
+        [Header("Star Rating")]
+        [SerializeField] private UIStarRating starRating;
 
         [Header("Colors")]
         [SerializeField]
@@ -31,6 +37,7 @@ namespace BlockPuzzle.Adventure
 
         private Button button;
         private Image background;
+
         private int levelId;
         private Action<int> onLevelSelected;
 
@@ -46,7 +53,12 @@ namespace BlockPuzzle.Adventure
             Action<int> selectionCallback)
         {
             if (definition == null)
+            {
+                Debug.LogWarning(
+                    "[AdventureLevelButton] Definition is null."
+                );
                 return;
+            }
 
             levelId = definition.LevelId;
             onLevelSelected = selectionCallback;
@@ -61,41 +73,56 @@ namespace BlockPuzzle.Adventure
                 AdventureSaveService.GetLevelRecord(levelId);
 
             bool completed = record.completed;
+            bool isLocked = !unlocked;
 
+            // LEVEL NUMBER
             if (numberText != null)
             {
                 numberText.text = levelId.ToString();
                 numberText.gameObject.SetActive(unlocked);
             }
 
+            // LOCK ICON
             if (lockText != null)
-                lockText.SetActive(!unlocked);
-
-            if (starsText != null)
             {
-                starsText.gameObject.SetActive(completed);
-
-                if (completed)
-                {
-                    int stars = Mathf.Clamp(
-                        record.bestStars, 0, 3
-                    );
-
-                    starsText.text =
-                        new string('★', stars) +
-                        new string('☆', 3 - stars);
-                }
+                lockText.SetActive(isLocked);
             }
 
-            background.color = !unlocked
-                ? lockedColor
-                : completed
-                    ? completedColor
-                    : unlockedColor;
+            // STAR RATING
+            if (starRating != null)
+            {
+                int bestStars = completed
+                    ? Mathf.Clamp(record.bestStars, 0, 3)
+                    : 0;
 
+                starRating.SetStars(bestStars);
+
+                // Locked levels do not display stars.
+                starRating.gameObject.SetActive(unlocked);
+            }
+            else
+            {
+                Debug.LogWarning(
+                    $"[AdventureLevelButton] " +
+                    $"StarRating missing on Level {levelId}."
+                );
+            }
+
+            // BACKGROUND COLOR
+            if (background != null)
+            {
+                background.color = isLocked
+                    ? lockedColor
+                    : completed
+                        ? completedColor
+                        : unlockedColor;
+            }
+
+            // BUTTON STATE
             button.interactable = unlocked;
 
-            button.onClick.RemoveAllListeners();
+            // Prevent duplicate listeners during refreshes.
+            button.onClick.RemoveListener(HandleClick);
 
             if (unlocked)
             {
@@ -106,6 +133,12 @@ namespace BlockPuzzle.Adventure
         private void HandleClick()
         {
             onLevelSelected?.Invoke(levelId);
+        }
+
+        private void OnDestroy()
+        {
+            if (button != null)
+                button.onClick.RemoveListener(HandleClick);
         }
     }
 }
