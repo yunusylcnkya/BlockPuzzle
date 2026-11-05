@@ -973,9 +973,9 @@ MonoBehaviour:
   m_OnClick:
     m_PersistentCalls:
       m_Calls:
-      - m_Target: {fileID: 0}
-        m_TargetAssemblyTypeName: BlockPuzzle.UI.SceneNavigationController, Assembly-CSharp
-        m_MethodName: BackToMenu
+      - m_Target: {fileID: 1314912888}
+        m_TargetAssemblyTypeName: BlockPuzzle.Adventure.AdventureGameController, Assembly-CSharp
+        m_MethodName: ReturnToMap
         m_Mode: 1
         m_Arguments:
           m_ObjectArgument: {fileID: 0}
