@@ -1,4 +1,3 @@
-
 using UnityEngine;
 using UnityEngine.SceneManagement;
 
@@ -13,35 +12,50 @@ namespace BlockPuzzle.Core
         GameOver
     }
 
+    /// <summary>
+    /// Keeps the existing game state/scene API and manages Android frame pacing.
+    /// Android first gets a short 120 FPS request so adaptive displays can switch
+    /// from their 30/60 Hz startup mode. We then keep 120 only if 120 Hz was
+    /// observed, otherwise use 60. During gameplay we can fall back to 60.
+    /// </summary>
     public sealed class GameManager : MonoBehaviour
     {
         public static GameManager Instance { get; private set; }
 
-        public GameState CurrentState { get; private set; }
-            = GameState.Boot;
+        public GameState CurrentState { get; private set; } = GameState.Boot;
 
         [Header("Adaptive FPS")]
-        [SerializeField]
-        private bool enable120FPS = true;
+        [SerializeField] private bool enable120FPS = true;
+        [SerializeField] private bool automaticPerformanceFallback = true;
 
-        [SerializeField]
-        private bool automaticPerformanceFallback = true;
+        [Header("Display Detection")]
+        [SerializeField, Range(4f, 10f)]
+        private float refreshProbeSeconds = 5f;
 
+        [Header("Performance Monitoring")]
         [SerializeField, Range(8f, 30f)]
         private float performanceCheckSeconds = 12f;
 
         [SerializeField, Range(70, 115)]
         private int minimumStableFPS = 96;
 
-        private int currentTargetFPS;
-        private float detectedRefreshRate;
+        [SerializeField, Range(1, 3)]
+        private int consecutiveLowSampleWindows = 2;
 
+        private const float ProbeReadIntervalSeconds = 0.5f;
+        private const float SceneWarmupSeconds = 4f;
+        private const float PauseSpikeThresholdSeconds = 0.5f;
+
+        private int currentTargetFPS;
+        private float highestObservedRefreshRate;
+        private bool probingRefreshRate;
+        private float probeEndTime;
+        private float nextProbeReadTime;
+        private float ignorePerformanceUntil;
         private float sampleTime;
         private int sampleFrames;
-        private float ignoreSamplesUntil;
-        private float nextRefreshCheck;
-
-        private bool fpsInitialized;
+        private int consecutiveLowSamples;
+        private bool wasPaused;
 
         public int CurrentTargetFPS => currentTargetFPS;
 
@@ -55,139 +69,114 @@ namespace BlockPuzzle.Core
 
             Instance = this;
             DontDestroyOnLoad(gameObject);
+            SceneManager.sceneLoaded += HandleSceneLoaded;
 
-            ConfigureFrameRate();
-
+            BeginFrameRateSelection();
             Debug.Log("[GameManager] Initialized.");
         }
 
-        private void ConfigureFrameRate()
+        private void BeginFrameRateSelection()
         {
+            // Android ignores vSyncCount and uses targetFrameRate.
+            // Setting it to 0 also makes Editor FPS tests easier to interpret.
             QualitySettings.vSyncCount = 0;
-            Application.targetFrameRate = 120;
-            detectedRefreshRate = ReadRefreshRate();
-
-            int selectedFPS = 120;
-
-            // Mobile uses targetFrameRate instead of vSyncCount.
-            QualitySettings.vSyncCount = 0;
-            Application.targetFrameRate = selectedFPS;
-
-            currentTargetFPS = selectedFPS;
-            fpsInitialized = true;
 
             ResetPerformanceSamples();
+            consecutiveLowSamples = 0;
+            ignorePerformanceUntil = Time.unscaledTime + SceneWarmupSeconds;
+            probingRefreshRate = false;
 
-            // Ignore startup and scene initialization spikes.
-            ignoreSamplesUntil = Time.unscaledTime + 8f;
-            nextRefreshCheck = Time.unscaledTime + 5f;
+            // Keep Editor and non-Android behavior predictable.
+            if (Application.platform != RuntimePlatform.Android || !enable120FPS)
+            {
+                ApplyTargetFrameRate(60, "Standard mode");
+                return;
+            }
+
+            // A 120 Hz Android phone can report only 30/60 Hz at startup.
+            // Requesting 120 lets the system choose its higher refresh mode.
+            highestObservedRefreshRate = ReadActiveRefreshRate();
+            ApplyTargetFrameRate(120, "High-refresh probe started");
+
+            probingRefreshRate = true;
+            probeEndTime = Time.unscaledTime + refreshProbeSeconds;
+            nextProbeReadTime = Time.unscaledTime;
 
             Debug.Log(
-                $"[FPS] Display: {detectedRefreshRate:F2} Hz | " +
-                $"Target: {currentTargetFPS} FPS"
+                $"[FPS] Probe: starting display {highestObservedRefreshRate:F2} Hz; " +
+                $"checking high refresh for {refreshProbeSeconds:F0} seconds."
             );
         }
 
-        private float ReadRefreshRate()
+        private static float ReadActiveRefreshRate()
         {
-            float refreshRate =
-                (float)Screen.currentResolution
-                    .refreshRateRatio.value;
-
-            if (refreshRate <= 0f)
-                return 60f;
-
-            return refreshRate;
-        }
-
-        private int SelectFrameRate(float refreshRate)
-        {
-            // Common 120 Hz displays.
-            if (refreshRate >= 118f &&
-                refreshRate <= 122f)
-            {
-                return enable120FPS ? 120 : 60;
-            }
-
-            // A 90 Hz display works best at 90 rather
-            // than requesting 60 and potentially getting 45.
-            if (refreshRate >= 88f &&
-                refreshRate <= 92f)
-            {
-                return 90;
-            }
-
-            // Standard 60 Hz displays.
-            if (refreshRate >= 58f &&
-                refreshRate <= 62f)
-            {
-                return 60;
-            }
-
-            // High-refresh displays, such as 144 Hz:
-            // prefer approximately half the refresh rate.
-            if (refreshRate > 122f)
-            {
-                return Mathf.CeilToInt(
-                    refreshRate / 2f
-                );
-            }
-
-            // Other supported display modes.
-            return Mathf.Clamp(
-                Mathf.RoundToInt(refreshRate),
-                60,
-                120
-            );
+            double rate = Screen.currentResolution.refreshRateRatio.value;
+            return rate > 0.0 ? (float)rate : 0f;
         }
 
         private void Update()
         {
-            if (!fpsInitialized)
-                return;
-
-            CheckDisplayRefreshRate();
-            MonitorPerformance();
-        }
-
-        private void CheckDisplayRefreshRate()
-        {
-            if (Time.unscaledTime < nextRefreshCheck)
-                return;
-
-            nextRefreshCheck = Time.unscaledTime + 5f;
-
-            float refreshRate = ReadRefreshRate();
-
-            if (Mathf.Abs(
-                refreshRate - detectedRefreshRate) >= 2f)
+            if (probingRefreshRate)
             {
-                Debug.Log(
-                    "[FPS] Display refresh rate changed."
-                );
-
-                ConfigureFrameRate();
+                UpdateRefreshProbe();
+                return;
             }
+
+            MonitorGamePerformance();
         }
 
-        private void MonitorPerformance()
+        private void UpdateRefreshProbe()
+        {
+            float now = Time.unscaledTime;
+
+            if (now >= nextProbeReadTime)
+            {
+                float currentRefresh = ReadActiveRefreshRate();
+                highestObservedRefreshRate = Mathf.Max(
+                    highestObservedRefreshRate, currentRefresh);
+
+                nextProbeReadTime = now + ProbeReadIntervalSeconds;
+            }
+
+            if (now < probeEndTime)
+                return;
+
+            probingRefreshRate = false;
+
+            // We saw the panel switch to high refresh in this app session.
+            // 115 Hz accommodates 119.88/120 Hz reporting variations.
+            int chosenFPS = highestObservedRefreshRate >= 115f ? 120 : 60;
+
+            ApplyTargetFrameRate(chosenFPS, "Display probe finished");
+            ResetPerformanceSamples();
+            ignorePerformanceUntil = now + SceneWarmupSeconds;
+
+            Debug.Log(
+                $"[FPS] Probe result: peak display {highestObservedRefreshRate:F2} Hz " +
+                $"| Target: {currentTargetFPS} FPS"
+            );
+        }
+
+        private void MonitorGamePerformance()
         {
             if (!automaticPerformanceFallback ||
-                currentTargetFPS != 120)
+                currentTargetFPS != 120 ||
+                CurrentState != GameState.Playing ||
+                Time.unscaledTime < ignorePerformanceUntil)
             {
+                // Menu screens and scene-loading periods should not trigger
+                // a permanent downgrade of gameplay performance.
+                ResetPerformanceSamples();
                 return;
             }
-
-            if (Time.unscaledTime < ignoreSamplesUntil)
-                return;
 
             float deltaTime = Time.unscaledDeltaTime;
 
-            // Ignore an isolated long interruption,
-            // such as returning from an external screen.
-            if (deltaTime <= 0f || deltaTime > 0.5f)
+            // Ignore a large one-off stall (pause, app switch, ad transition).
+            if (deltaTime <= 0f || deltaTime > PauseSpikeThresholdSeconds)
             {
                 ResetPerformanceSamples();
+                ignorePerformanceUntil = Time.unscaledTime + 2f;
                 return;
             }
 
@@ -200,23 +189,43 @@ namespace BlockPuzzle.Core
             float averageFPS = sampleFrames / sampleTime;
 
             Debug.Log(
-                $"[FPS] Average: {averageFPS:F1} | " +
-                $"Target : {currentTargetFPS}"
+                $"[FPS] Average: {averageFPS:F1} | Target: {currentTargetFPS}"
             );
 
             if (averageFPS < minimumStableFPS)
             {
-                currentTargetFPS = 120;
-                Application.targetFrameRate = 120;
+                consecutiveLowSamples++;
+            }
+            else
+            {
+                consecutiveLowSamples = 0;
+            }
+
+            if (consecutiveLowSamples >= consecutiveLowSampleWindows)
+            {
+                ApplyTargetFrameRate(60,
+                    $"Performance fallback; observed {averageFPS:F1} FPS");
 
                 Debug.Log(
-                    "[FPS] Performance fallback: " +
-                    $"120 -> 60 FPS. " +
-                    $"Measured average: {averageFPS:F1}"
+                    $"[FPS] Performance fallback: 120 -> 60 FPS " +
+                    $"after {consecutiveLowSamples} low measurement windows."
                 );
+
+                consecutiveLowSamples = 0;
             }
 
             ResetPerformanceSamples();
+        }
+
+        private void ApplyTargetFrameRate(int target, string reason)
+        {
+            currentTargetFPS = target;
+            Application.targetFrameRate = target;
+
+            Debug.Log(
+                $"[FPS] Display: {ReadActiveRefreshRate():F2} Hz | " +
+                $"Target: {currentTargetFPS} FPS | {reason}"
+            );
         }
 
         private void ResetPerformanceSamples()
@@ -225,16 +234,38 @@ namespace BlockPuzzle.Core
             sampleFrames = 0;
         }
 
+        private void HandleSceneLoaded(Scene scene, LoadSceneMode mode)
+        {
+            ResetPerformanceSamples();
+            consecutiveLowSamples = 0;
+            ignorePerformanceUntil = Time.unscaledTime + SceneWarmupSeconds;
+        }
+
         private void OnApplicationPause(bool paused)
         {
             if (paused)
             {
+                wasPaused = true;
                 ResetPerformanceSamples();
                 return;
             }
 
-            if (fpsInitialized)
-                ConfigureFrameRate();
+            // Unity may send OnApplicationPause(false) at launch; don't
+            // restart the initial probe unless the app was actually paused.
+            if (wasPaused)
+            {
+                wasPaused = false;
+                BeginFrameRateSelection();
+            }
+        }
+
+        private void OnDestroy()
+        {
+            if (Instance != this)
+                return;
+
+            SceneManager.sceneLoaded -= HandleSceneLoaded;
+            Instance = null;
         }
 
         public void SetState(GameState newState)
@@ -243,35 +274,28 @@ namespace BlockPuzzle.Core
                 return;
 
             CurrentState = newState;
+            ResetPerformanceSamples();
+            consecutiveLowSamples = 0;
+            ignorePerformanceUntil = Time.unscaledTime + SceneWarmupSeconds;
 
-            Debug.Log(
-                $"[GameManager] State: {CurrentState}"
-            );
+            Debug.Log($"[GameManager] State: {CurrentState}");
         }
 
         public void LoadScene(string sceneName)
         {
             if (string.IsNullOrWhiteSpace(sceneName))
             {
-                Debug.LogError(
-                    "[GameManager] Scene name is empty."
-                );
+                Debug.LogError("[GameManager] Scene name is empty.");
                 return;
             }
 
-            if (!Application.CanStreamedLevelBeLoaded(
-                sceneName))
+            if (!Application.CanStreamedLevelBeLoaded(sceneName))
             {
-                Debug.LogError(
-                    $"[GameManager] Scene not found: {sceneName}"
-                );
+                Debug.LogError("[GameManager] Scene not found: " + sceneName);
                 return;
             }
 
-            Debug.Log(
-                $"[GameManager] Loading: {sceneName}"
-            );
-
+            Debug.Log("[GameManager] Loading: " + sceneName);
             SceneManager.LoadScene(sceneName);
         }
     }
