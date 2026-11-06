@@ -1,4 +1,3 @@
-
 using System;
 using UnityEngine;
 
@@ -6,14 +5,11 @@ namespace BlockPuzzle.SaveSystem
 {
     public static class AdventureSaveService
     {
-        private const string SaveKey =
-            "BlockPuzzle.Adventure.SaveData.V1";
-
-        private const string LegacyUnlockKey =
-            "BlockPuzzle.Adventure.HighestUnlockedLevel";
+        // Keep this key unchanged so existing coins, stars and progress survive.
+        private const string SaveKey = "BlockPuzzle.Adventure.SaveData.V1";
+        private const string LegacyUnlockKey = "BlockPuzzle.Adventure.HighestUnlockedLevel";
 
         private static AdventureSaveData cachedData;
-
         public static event Action DataChanged;
 
         public static int HighestUnlockedLevel
@@ -25,38 +21,6 @@ namespace BlockPuzzle.SaveSystem
             }
         }
 
-        public static void AddRewardedCoins(int amount)
-        {
-            EnsureLoaded();
-
-            if (amount <= 0)
-            {
-                Debug.LogWarning(
-                    "[SaveSystem] Invalid rewarded coin amount."
-                );
-                return;
-            }
-
-            if (cachedData.totalCoins > int.MaxValue - amount)
-            {
-                Debug.LogError(
-                    "[SaveSystem] Coin balance limit reached."
-                );
-                return;
-            }
-
-            cachedData.totalCoins += amount;
-
-            // Existing Save() persists the same v1.0 JSON data
-            // and invokes DataChanged.
-            Save();
-
-            Debug.Log(
-                $"[SaveSystem] Rewarded coins saved. " +
-                $"Amount: +{amount}, Total: {cachedData.totalCoins}"
-            );
-        }
-
         public static int TotalCoins
         {
             get
@@ -66,13 +30,60 @@ namespace BlockPuzzle.SaveSystem
             }
         }
 
+        /// <summary>
+        /// Deducts coins and persists the new balance. Never allows a negative
+        /// balance, and never changes stars or unlocked levels.
+        /// </summary>
+        public static bool TrySpendCoins(int amount)
+        {
+            EnsureLoaded();
+
+            if (amount <= 0)
+            {
+                Debug.LogWarning("[Wallet] Spend amount must be positive.");
+                return false;
+            }
+
+            if (cachedData.totalCoins < amount)
+            {
+                Debug.Log($"[Wallet] Not enough coins. Have {cachedData.totalCoins}, need {amount}.");
+                return false;
+            }
+
+            cachedData.totalCoins -= amount;
+            Save();
+            Debug.Log($"[Wallet] Spent {amount} coins; remaining {cachedData.totalCoins}.");
+            return true;
+        }
+
+        // Keep the rewarded-ad API and its behavior unchanged.
+        public static void AddRewardedCoins(int amount)
+        {
+            EnsureLoaded();
+
+            if (amount <= 0)
+            {
+                Debug.LogWarning("[SaveSystem] Invalid rewarded coin amount.");
+                return;
+            }
+
+            if (cachedData.totalCoins > int.MaxValue - amount)
+            {
+                Debug.LogError("[SaveSystem] Coin balance limit reached.");
+                return;
+            }
+
+            cachedData.totalCoins += amount;
+            Save();
+            Debug.Log($"[SaveSystem] Rewarded coins saved. Amount: +{amount}, Total: {cachedData.totalCoins}");
+        }
+
         private static void EnsureLoaded()
         {
             if (cachedData != null)
                 return;
 
             string json = PlayerPrefs.GetString(SaveKey, "");
-
             if (string.IsNullOrEmpty(json))
             {
                 cachedData = new AdventureSaveData();
@@ -81,16 +92,11 @@ namespace BlockPuzzle.SaveSystem
             {
                 try
                 {
-                    cachedData =
-                        JsonUtility.FromJson<AdventureSaveData>(json);
+                    cachedData = JsonUtility.FromJson<AdventureSaveData>(json);
                 }
                 catch (Exception exception)
                 {
-                    Debug.LogError(
-                        "[SaveSystem] Failed to read save: " +
-                        exception.Message
-                    );
-
+                    Debug.LogError("[SaveSystem] Failed to read save: " + exception.Message);
                     cachedData = new AdventureSaveData();
                 }
             }
@@ -99,48 +105,26 @@ namespace BlockPuzzle.SaveSystem
                 cachedData = new AdventureSaveData();
 
             if (cachedData.levels == null)
+                cachedData.levels = new System.Collections.Generic.List<AdventureLevelRecord>();
+
+            cachedData.highestUnlockedLevel = Mathf.Max(1, cachedData.highestUnlockedLevel);
+            cachedData.totalCoins = Mathf.Max(0, cachedData.totalCoins);
+
+            int legacyHighest = PlayerPrefs.GetInt(LegacyUnlockKey, 1);
+            if (legacyHighest > cachedData.highestUnlockedLevel)
             {
-                cachedData.levels =
-                    new System.Collections.Generic.List<
-                        AdventureLevelRecord>();
-            }
-
-            cachedData.highestUnlockedLevel =
-                Mathf.Max(1, cachedData.highestUnlockedLevel);
-
-            cachedData.totalCoins =
-                Mathf.Max(0, cachedData.totalCoins);
-
-            // Preserve progress from v0.9.
-            int legacyHighest = PlayerPrefs.GetInt(
-                LegacyUnlockKey,
-                1
-            );
-
-            if (legacyHighest >
-                cachedData.highestUnlockedLevel)
-            {
-                cachedData.highestUnlockedLevel =
-                    legacyHighest;
-
+                cachedData.highestUnlockedLevel = legacyHighest;
                 Save();
             }
         }
 
-        public static AdventureLevelRecord GetLevelRecord(
-            int levelId)
+        public static AdventureLevelRecord GetLevelRecord(int levelId)
         {
             EnsureLoaded();
-
-            foreach (AdventureLevelRecord record
-                     in cachedData.levels)
+            foreach (AdventureLevelRecord record in cachedData.levels)
             {
-                if (record != null &&
-                    record.levelId == levelId)
-                {
-                    // Return a copy so UI cannot mutate save state.
+                if (record != null && record.levelId == levelId)
                     return CopyRecord(record);
-                }
             }
 
             return new AdventureLevelRecord
@@ -157,129 +141,69 @@ namespace BlockPuzzle.SaveSystem
         public static bool IsUnlocked(int levelId)
         {
             EnsureLoaded();
-
-            return levelId >= 1 &&
-                   levelId <= cachedData.highestUnlockedLevel;
+            return levelId >= 1 && levelId <= cachedData.highestUnlockedLevel;
         }
 
         public static AdventureCompletionResult CompleteLevel(
-            int levelId,
-            int score,
-            int movesUsed,
-            int moveLimit)
+            int levelId, int score, int movesUsed, int moveLimit)
         {
             EnsureLoaded();
 
             if (levelId < 1 || !IsUnlocked(levelId))
             {
-                Debug.LogWarning(
-                    "[SaveSystem] Invalid or locked level."
-                );
-
-                return new AdventureCompletionResult(
-                    0, 0, 0, TotalCoins, false
-                );
+                Debug.LogWarning("[SaveSystem] Invalid or locked level.");
+                return new AdventureCompletionResult(0, 0, 0, TotalCoins, false);
             }
 
-            int earnedStars =
-                AdventureStarCalculator.CalculateStars(
-                    movesUsed,
-                    moveLimit
-                );
-
+            int earnedStars = AdventureStarCalculator.CalculateStars(movesUsed, moveLimit);
             if (earnedStars <= 0)
             {
-                Debug.LogWarning(
-                    "[SaveSystem] Invalid completion metrics."
-                );
-
-                return new AdventureCompletionResult(
-                    0, 0, 0, TotalCoins, false
-                );
+                Debug.LogWarning("[SaveSystem] Invalid completion metrics.");
+                return new AdventureCompletionResult(0, 0, 0, TotalCoins, false);
             }
 
-            AdventureLevelRecord record =
-                FindOrCreateRecord(levelId);
-
+            AdventureLevelRecord record = FindOrCreateRecord(levelId);
             bool firstCompletion = !record.completed;
-
             record.completed = true;
-            record.bestStars = Mathf.Max(
-                record.bestStars,
-                earnedStars
-            );
-
-            record.bestScore = Mathf.Max(
-                record.bestScore,
-                Mathf.Max(0, score)
-            );
+            record.bestStars = Mathf.Max(record.bestStars, earnedStars);
+            record.bestScore = Mathf.Max(record.bestScore, Mathf.Max(0, score));
 
             if (record.bestMoves <= 0)
-            {
                 record.bestMoves = movesUsed;
-            }
             else
-            {
-                record.bestMoves = Mathf.Min(
-                    record.bestMoves,
-                    movesUsed
-                );
-            }
+                record.bestMoves = Mathf.Min(record.bestMoves, movesUsed);
 
             int coinsEarned = 0;
-
             if (!record.rewardClaimed)
             {
-                coinsEarned =
-                    AdventureStarCalculator.CalculateFirstReward(
-                        earnedStars
-                    );
-
+                coinsEarned = AdventureStarCalculator.CalculateFirstReward(earnedStars);
                 cachedData.totalCoins += coinsEarned;
                 record.rewardClaimed = true;
             }
 
-            cachedData.highestUnlockedLevel =
-                Mathf.Max(
-                    cachedData.highestUnlockedLevel,
-                    levelId + 1
-                );
+            cachedData.highestUnlockedLevel = Mathf.Max(
+                cachedData.highestUnlockedLevel, levelId + 1);
 
             Save();
-
             return new AdventureCompletionResult(
-                earnedStars,
-                record.bestStars,
-                coinsEarned,
-                cachedData.totalCoins,
-                firstCompletion
-            );
+                earnedStars, record.bestStars, coinsEarned,
+                cachedData.totalCoins, firstCompletion);
         }
 
-        private static AdventureLevelRecord FindOrCreateRecord(
-            int levelId)
+        private static AdventureLevelRecord FindOrCreateRecord(int levelId)
         {
-            foreach (AdventureLevelRecord record
-                     in cachedData.levels)
+            foreach (AdventureLevelRecord record in cachedData.levels)
             {
-                if (record != null &&
-                    record.levelId == levelId)
+                if (record != null && record.levelId == levelId)
                     return record;
             }
 
-            AdventureLevelRecord created =
-                new AdventureLevelRecord
-                {
-                    levelId = levelId
-                };
-
+            AdventureLevelRecord created = new AdventureLevelRecord { levelId = levelId };
             cachedData.levels.Add(created);
-
             return created;
         }
 
-        private static AdventureLevelRecord CopyRecord(
-            AdventureLevelRecord source)
+        private static AdventureLevelRecord CopyRecord(AdventureLevelRecord source)
         {
             return new AdventureLevelRecord
             {
@@ -295,22 +219,11 @@ namespace BlockPuzzle.SaveSystem
         private static void Save()
         {
             cachedData.saveVersion = 1;
-
-            string json =
-                JsonUtility.ToJson(cachedData);
-
+            string json = JsonUtility.ToJson(cachedData);
             PlayerPrefs.SetString(SaveKey, json);
-
-            // Keep the old key synchronized for compatibility.
-            PlayerPrefs.SetInt(
-                LegacyUnlockKey,
-                cachedData.highestUnlockedLevel
-            );
-
+            PlayerPrefs.SetInt(LegacyUnlockKey, cachedData.highestUnlockedLevel);
             PlayerPrefs.Save();
-
             DataChanged?.Invoke();
-
             Debug.Log("[SaveSystem] Progress saved.");
         }
 

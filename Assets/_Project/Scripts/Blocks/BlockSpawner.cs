@@ -1,4 +1,3 @@
-
 using System;
 using System.Collections.Generic;
 using UnityEngine;
@@ -9,23 +8,16 @@ namespace BlockPuzzle.Blocks
     public sealed class BlockSpawner : MonoBehaviour
     {
         [Header("Block Library")]
-        [SerializeField]
-        private List<BlockDefinition> blockLibrary = new();
+        [SerializeField] private List<BlockDefinition> blockLibrary = new();
 
         [Header("References")]
         [SerializeField] private BlockView blockViewPrefab;
-
-        [SerializeField]
-        private RectTransform[] slots =
-            new RectTransform[3];
-
+        [SerializeField] private RectTransform[] slots = new RectTransform[3];
         [SerializeField] private RectTransform dragLayer;
         [SerializeField] private GridManager gridManager;
 
         private readonly List<BlockView> activeBlocks = new();
-
         public IReadOnlyList<BlockView> ActiveBlocks => activeBlocks;
-
         public event Action TrayChanged;
 
         private void Start()
@@ -35,16 +27,10 @@ namespace BlockPuzzle.Blocks
 
         public void SpawnThreeBlocks()
         {
-            if (blockViewPrefab == null ||
-                gridManager == null ||
-                dragLayer == null ||
-                slots == null ||
-                slots.Length != 3 ||
-                blockLibrary == null)
+            if (blockViewPrefab == null || gridManager == null || dragLayer == null ||
+                slots == null || slots.Length != 3 || blockLibrary == null)
             {
-                Debug.LogError(
-                    "[BlockSpawner] Missing references."
-                );
+                Debug.LogError("[BlockSpawner] Missing references.");
                 return;
             }
 
@@ -52,15 +38,12 @@ namespace BlockPuzzle.Blocks
             {
                 if (slot == null)
                 {
-                    Debug.LogError(
-                        "[BlockSpawner] Missing slot."
-                    );
+                    Debug.LogError("[BlockSpawner] Missing slot.");
                     return;
                 }
             }
 
             List<BlockDefinition> validBlocks = new();
-
             foreach (BlockDefinition definition in blockLibrary)
             {
                 if (definition != null && definition.IsValid())
@@ -69,9 +52,7 @@ namespace BlockPuzzle.Blocks
 
             if (validBlocks.Count == 0)
             {
-                Debug.LogError(
-                    "[BlockSpawner] No valid blocks."
-                );
+                Debug.LogError("[BlockSpawner] No valid blocks.");
                 return;
             }
 
@@ -79,74 +60,144 @@ namespace BlockPuzzle.Blocks
 
             for (int i = 0; i < 3; i++)
             {
-                BlockDefinition selected =
-                    validBlocks[
-                        UnityEngine.Random.Range(
-                            0, validBlocks.Count
-                        )
-                    ];
-
-                BlockView block = Instantiate(
-                    blockViewPrefab,
-                    slots[i]
-                );
-
-                RectTransform rect =
-                    block.GetComponent<RectTransform>();
-
+                BlockDefinition selected = validBlocks[
+                    UnityEngine.Random.Range(0, validBlocks.Count)];
+                BlockView block = Instantiate(blockViewPrefab, slots[i]);
+                RectTransform rect = block.GetComponent<RectTransform>();
                 rect.anchorMin = Vector2.one * 0.5f;
                 rect.anchorMax = Vector2.one * 0.5f;
                 rect.pivot = Vector2.one * 0.5f;
                 rect.anchoredPosition = Vector2.zero;
                 rect.localScale = Vector3.one;
-
                 block.Initialize(selected);
 
-                BlockDragHandler drag =
-                    block.GetComponent<BlockDragHandler>();
-
+                BlockDragHandler drag = block.GetComponent<BlockDragHandler>();
                 if (drag != null)
-                {
-                    drag.Initialize(
-                        gridManager,
-                        this,
-                        dragLayer
-                    );
-                }
+                    drag.Initialize(gridManager, this, dragLayer);
                 else
-                {
-                    Debug.LogError(
-                        "[BlockSpawner] BlockDragHandler missing."
-                    );
-                }
+                    Debug.LogError("[BlockSpawner] BlockDragHandler missing.");
 
                 activeBlocks.Add(block);
             }
 
-            Debug.Log(
-                "[BlockSpawner] Three blocks spawned."
-            );
-
+            Debug.Log("[BlockSpawner] Three blocks spawned.");
             TrayChanged?.Invoke();
         }
 
         public void NotifyBlockUsed(BlockView block)
         {
-            if (block == null)
-                return;
-
-            if (!activeBlocks.Remove(block))
+            if (block == null || !activeBlocks.Remove(block))
                 return;
 
             if (activeBlocks.Count == 0)
-            {
-                // Notify only after the next group exists.
                 SpawnThreeBlocks();
-            }
             else
-            {
                 TrayChanged?.Invoke();
+        }
+
+        /// <summary>
+        /// Determines whether the remaining tray blocks can be exchanged.
+        /// Only offers replacements that fit somewhere on the current board.
+        /// A block being dragged is never replaced.
+        /// </summary>
+        public bool CanRerollRemainingBlocks()
+        {
+            if (gridManager == null || gridManager.GetCell(0, 0) == null ||
+                activeBlocks.Count == 0 || slots == null || slots.Length != 3)
+                return false;
+
+            foreach (BlockView block in activeBlocks)
+            {
+                if (block == null || block.Definition == null ||
+                    !block.gameObject.activeInHierarchy || !IsInTraySlot(block))
+                    return false;
             }
+
+            List<BlockDefinition> choices = GetPlaceableDefinitions();
+            if (choices.Count == 0)
+                return false;
+
+            // Do not charge the player for a reroll that cannot change anything.
+            if (choices.Count == 1)
+            {
+                foreach (BlockView block in activeBlocks)
+                {
+                    if (block.Definition != choices[0])
+                        return true;
+                }
+                return false;
+            }
+
+            return true;
+        }
+
+        /// <summary>
+        /// Selects valid replacement shapes, then calls payment once.
+        /// No blocks are altered when the validation or payment fails.
+        /// A successful reroll does not consume a gameplay move.
+        /// </summary>
+        public bool TryRerollRemainingBlocks(Func<bool> tryCommitPayment)
+        {
+            if (tryCommitPayment == null || !CanRerollRemainingBlocks())
+                return false;
+
+            List<BlockDefinition> choices = GetPlaceableDefinitions();
+            List<BlockDefinition> replacements = new(activeBlocks.Count);
+
+            foreach (BlockView block in activeBlocks)
+            {
+                // Prefer a different shape from the one being replaced.
+                List<BlockDefinition> different = new();
+                foreach (BlockDefinition choice in choices)
+                {
+                    if (choice != block.Definition)
+                        different.Add(choice);
+                }
+
+                List<BlockDefinition> pool = different.Count > 0 ? different : choices;
+                replacements.Add(pool[UnityEngine.Random.Range(0, pool.Count)]);
+            }
+
+            // Validate first, spend second, apply third. No automatic refunds
+            // are needed for ordinary validation failures.
+            if (!tryCommitPayment())
+                return false;
+
+            for (int i = 0; i < activeBlocks.Count; i++)
+                activeBlocks[i].Initialize(replacements[i]);
+
+            Debug.Log($"[BlockSpawner] Replaced {replacements.Count} remaining tray blocks.");
+            TrayChanged?.Invoke();
+            return true;
+        }
+
+        private bool IsInTraySlot(BlockView block)
+        {
+            Transform parent = block.transform.parent;
+            foreach (RectTransform slot in slots)
+            {
+                if (slot != null && parent == slot)
+                    return true;
+            }
+            return false;
+        }
+
+        private List<BlockDefinition> GetPlaceableDefinitions()
+        {
+            List<BlockDefinition> choices = new();
+            if (blockLibrary == null || gridManager == null)
+                return choices;
+
+            foreach (BlockDefinition definition in blockLibrary)
+            {
+                if (definition == null || !definition.IsValid() ||
+                    choices.Contains(definition))
+                    continue;
+
+                if (gridManager.HasAnyValidPlacement(definition))
+                    choices.Add(definition);
+            }
+            return choices;
         }
 
         private void ClearActiveBlocks()
@@ -159,7 +210,6 @@ namespace BlockPuzzle.Blocks
                     Destroy(block.gameObject);
                 }
             }
-
             activeBlocks.Clear();
         }
     }
