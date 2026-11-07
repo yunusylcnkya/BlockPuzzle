@@ -47,16 +47,113 @@ namespace BlockPuzzle.Adventure
         [Header("Result Star Rating")]
         [SerializeField] private UIStarRating resultStarRating;
 
+        [Header("Extra Moves - Coin Shop")]
+        [SerializeField, Min(1)] private int extraMovesPerPurchase = 5;
+        [SerializeField, Range(1, 5)] private int maxExtraMovePurchases = 2;
+        [SerializeField] private Button resultExtraMovesOfferButton;
+
         private AdventureLevelDefinition currentLevel;
         private int movesUsed;
         private int totalLinesCleared;
         private int totalBlocksPlaced;
+        private int extraMovePurchases;
+        private bool failedDueToMoveLimit;
         private bool gameFinished;
         private bool initialized;
         private Coroutine pendingEvaluation;
 
-        // Undo may only be purchased before a level has ended; completed level
-        // rewards and unlocked levels are never rolled back by the shop.
+        public int ExtraMovesPerPurchase => extraMovesPerPurchase;
+        public int MaxExtraMovePurchases => maxExtraMovePurchases;
+        public int ExtraMovePurchasesUsed => extraMovePurchases;
+        public int EffectiveMoveLimit => currentLevel == null
+            ? 0 : currentLevel.MoveLimit + extraMovePurchases * extraMovesPerPurchase;
+
+        // The shop may revive only the NO MOVES LEFT result, never a completed
+        // level or a NO AVAILABLE PLACEMENTS result.
+        public bool IsAwaitingExtraMoves => initialized && gameFinished &&
+            failedDueToMoveLimit && currentLevel != null &&
+            GameManager.Instance != null &&
+            GameManager.Instance.CurrentState == GameState.GameOver;
+
+        public bool CanPurchaseExtraMoves
+        {
+            get
+            {
+                if (!initialized || currentLevel == null || gridManager == null ||
+                    blockSpawner == null || extraMovePurchases >= maxExtraMovePurchases ||
+                    extraMovesPerPurchase <= 0 || blockSpawner.IsAnyBlockDragging ||
+                    gridManager.GetCell(0, 0) == null || GameManager.Instance == null)
+                    return false;
+
+                // Without a playable block, buying moves alone cannot help.
+                if (!HasValidMoveInTray())
+                    return false;
+
+                if (gameFinished)
+                    return IsAwaitingExtraMoves;
+
+                return GameManager.Instance.CurrentState == GameState.Playing &&
+                    movesUsed < EffectiveMoveLimit;
+            }
+        }
+
+        private bool HasValidMoveInTray()
+        {
+            foreach (BlockView block in blockSpawner.ActiveBlocks)
+            {
+                if (block != null && block.Definition != null &&
+                    gridManager.HasAnyValidPlacement(block.Definition))
+                    return true;
+            }
+            return false;
+        }
+
+        // The payment callback is called only after all gameplay checks pass.
+        // The extra move allowance lasts for this level attempt only.
+        public bool TryPurchaseExtraMoves(Func<bool> tryCommitPayment)
+        {
+            if (tryCommitPayment == null || !CanPurchaseExtraMoves)
+                return false;
+
+            if (!tryCommitPayment())
+                return false;
+
+            extraMovePurchases++;
+            bool wasRescue = gameFinished && failedDueToMoveLimit;
+
+            if (wasRescue)
+            {
+                gameFinished = false;
+                failedDueToMoveLimit = false;
+
+                if (resultPanel != null)
+                    resultPanel.SetActive(false);
+
+                if (resultExtraMovesOfferButton != null)
+                    resultExtraMovesOfferButton.gameObject.SetActive(false);
+
+                foreach (BlockView block in blockSpawner.ActiveBlocks)
+                {
+                    if (block == null) continue;
+                    BlockDragHandler drag = block.GetComponent<BlockDragHandler>();
+                    if (drag != null)
+                        drag.enabled = true;
+                }
+
+                if (GameManager.Instance != null)
+                    GameManager.Instance.SetState(GameState.Playing);
+            }
+
+            RefreshObjectiveUI();
+            RequestEvaluation();
+            Debug.Log($"[ExtraMoves] +{extraMovesPerPurchase} purchased; " +
+                $"limit {EffectiveMoveLimit}; purchases {extraMovePurchases}/{maxExtraMovePurchases}; " +
+                $"revived={wasRescue}.");
+            return true;
+        }
+
+        // The Undo system deliberately captures only the actual move counters.
+        // Purchased extra moves are not refunded or lost when a move is undone.
         public bool CanUndoMove => initialized && !gameFinished && currentLevel != null &&
             GameManager.Instance != null &&
             GameManager.Instance.CurrentState == GameState.Playing;
@@ -134,8 +231,13 @@ namespace BlockPuzzle.Adventure
             movesUsed = 0;
             totalLinesCleared = 0;
             totalBlocksPlaced = 0;
+            extraMovePurchases = 0;
+            failedDueToMoveLimit = false;
             gameFinished = false;
             initialized = true;
+
+            if (resultExtraMovesOfferButton != null)
+                resultExtraMovesOfferButton.gameObject.SetActive(false);
 
             if (GameManager.Instance != null)
                 GameManager.Instance.SetState(GameState.Playing);
@@ -215,7 +317,7 @@ namespace BlockPuzzle.Adventure
                 currentLevel.LevelName.ToUpperInvariant();
             objectiveText.text = GetObjectiveLabel();
             progressValueText.text = $"{Mathf.Min(progress, target)} / {target}";
-            movesText.text = $"MOVES {movesUsed} / {currentLevel.MoveLimit}";
+            movesText.text = $"MOVES {movesUsed} / {EffectiveMoveLimit}";
             progressFill.fillAmount = target > 0
                 ? Mathf.Clamp01((float)progress / target) : 0f;
         }
@@ -239,7 +341,7 @@ namespace BlockPuzzle.Adventure
                 CompleteLevel();
                 yield break;
             }
-            if (movesUsed >= currentLevel.MoveLimit)
+            if (movesUsed >= EffectiveMoveLimit)
             {
                 FailLevel("NO MOVES LEFT");
                 yield break;
@@ -266,9 +368,14 @@ namespace BlockPuzzle.Adventure
         {
             if (gameFinished) return;
             gameFinished = true;
+            failedDueToMoveLimit = false;
+
+            // Extra moves do not inflate the star rating: grades still use the
+            // original move limit. Going beyond it yields at most one star.
+            int starRatingMoveLimit = Mathf.Max(currentLevel.MoveLimit, movesUsed);
             AdventureCompletionResult completion = AdventureSaveService.CompleteLevel(
                 currentLevel.LevelId, scoreManager.CurrentScore,
-                movesUsed, currentLevel.MoveLimit);
+                movesUsed, starRatingMoveLimit);
             AdventureLevelRecord record = AdventureSaveService.GetLevelRecord(currentLevel.LevelId);
 
             if (resultCoinsText != null)
@@ -287,6 +394,7 @@ namespace BlockPuzzle.Adventure
         {
             if (gameFinished) return;
             gameFinished = true;
+            failedDueToMoveLimit = reason == "NO MOVES LEFT";
             if (resultCoinsText != null) resultCoinsText.text = string.Empty;
             if (resultBestText != null) resultBestText.text = string.Empty;
             ShowResult(false, "LEVEL FAILED", reason);
@@ -325,7 +433,10 @@ namespace BlockPuzzle.Adventure
             if (nextLevelButton != null)
                 nextLevelButton.SetActive(completed &&
                     catalog.ContainsLevel(currentLevel.LevelId + 1));
-            if (retryButton != null) retryButton.SetActive(!completed);
+            if (retryButton != null)
+                retryButton.SetActive(!completed);
+            if (resultExtraMovesOfferButton != null)
+                resultExtraMovesOfferButton.gameObject.SetActive(!completed && CanPurchaseExtraMoves);
             resultPanel.SetActive(true);
         }
 
