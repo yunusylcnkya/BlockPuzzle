@@ -55,19 +55,52 @@ namespace BlockPuzzle.Adventure
         private bool initialized;
         private Coroutine pendingEvaluation;
 
+        // Undo may only be purchased before a level has ended; completed level
+        // rewards and unlocked levels are never rolled back by the shop.
+        public bool CanUndoMove => initialized && !gameFinished && currentLevel != null &&
+            GameManager.Instance != null &&
+            GameManager.Instance.CurrentState == GameState.Playing;
+
+        public readonly struct UndoProgressState
+        {
+            public readonly int Moves;
+            public readonly int Lines;
+            public readonly int Blocks;
+
+            public UndoProgressState(int moves, int lines, int blocks)
+            {
+                Moves = moves;
+                Lines = lines;
+                Blocks = blocks;
+            }
+        }
+
+        public UndoProgressState CaptureUndoProgress() =>
+            new UndoProgressState(movesUsed, totalLinesCleared, totalBlocksPlaced);
+
+        public void RestoreUndoProgress(UndoProgressState state)
+        {
+            if (pendingEvaluation != null)
+            {
+                StopCoroutine(pendingEvaluation);
+                pendingEvaluation = null;
+            }
+            movesUsed = state.Moves;
+            totalLinesCleared = state.Lines;
+            totalBlocksPlaced = state.Blocks;
+            RefreshObjectiveUI();
+            RequestEvaluation();
+        }
+
         private void Awake()
         {
-            if (resultPanel != null)
-                resultPanel.SetActive(false);
+            if (resultPanel != null) resultPanel.SetActive(false);
         }
 
         private void OnEnable()
         {
-            if (gridManager != null)
-                gridManager.BlockPlaced += HandleBlockPlaced;
-
-            if (blockSpawner != null)
-                blockSpawner.TrayChanged += HandleTrayChanged;
+            if (gridManager != null) gridManager.BlockPlaced += HandleBlockPlaced;
+            if (blockSpawner != null) blockSpawner.TrayChanged += HandleTrayChanged;
         }
 
         private void Start()
@@ -78,16 +111,11 @@ namespace BlockPuzzle.Adventure
                 enabled = false;
                 return;
             }
-
             if (resultStarRating == null)
-            {
-                Debug.LogWarning(
-                    "[Adventure] Result Star Rating is not assigned. " +
+                Debug.LogWarning("[Adventure] Result Star Rating is not assigned. " +
                     "Gameplay will run, but the star display will be missing.");
-            }
 
             int levelId = AdventureSession.SelectedLevelId;
-
             if (levelId < 1 || !AdventureProgress.IsUnlocked(levelId))
             {
                 Debug.LogWarning("[Adventure] Invalid selected level.");
@@ -96,7 +124,6 @@ namespace BlockPuzzle.Adventure
             }
 
             currentLevel = catalog.GetLevel(levelId);
-
             if (currentLevel == null)
             {
                 Debug.LogError($"[Adventure] Level {levelId} not found.");
@@ -115,35 +142,22 @@ namespace BlockPuzzle.Adventure
 
             RefreshObjectiveUI();
             RequestEvaluation();
-
             Debug.Log($"[Adventure] Level {currentLevel.LevelId} started.");
         }
 
         private bool ValidateReferences()
         {
-            return catalog != null &&
-                   gridManager != null &&
-                   blockSpawner != null &&
-                   scoreManager != null &&
-                   levelTitleText != null &&
-                   objectiveText != null &&
-                   progressValueText != null &&
-                   movesText != null &&
-                   progressFill != null &&
-                   resultPanel != null &&
-                   resultTitleText != null &&
-                   resultDescriptionText != null &&
-                   resultScoreText != null;
+            return catalog != null && gridManager != null && blockSpawner != null &&
+                scoreManager != null && levelTitleText != null && objectiveText != null &&
+                progressValueText != null && movesText != null && progressFill != null &&
+                resultPanel != null && resultTitleText != null &&
+                resultDescriptionText != null && resultScoreText != null;
         }
 
         private void OnDisable()
         {
-            if (gridManager != null)
-                gridManager.BlockPlaced -= HandleBlockPlaced;
-
-            if (blockSpawner != null)
-                blockSpawner.TrayChanged -= HandleTrayChanged;
-
+            if (gridManager != null) gridManager.BlockPlaced -= HandleBlockPlaced;
+            if (blockSpawner != null) blockSpawner.TrayChanged -= HandleTrayChanged;
             if (pendingEvaluation != null)
             {
                 StopCoroutine(pendingEvaluation);
@@ -153,225 +167,145 @@ namespace BlockPuzzle.Adventure
 
         private void HandleBlockPlaced(BlockPlacementResult placement)
         {
-            if (!initialized || gameFinished || placement == null)
-                return;
-
+            if (!initialized || gameFinished || placement == null) return;
             movesUsed++;
             totalBlocksPlaced++;
-
             if (placement.LineClear != null)
                 totalLinesCleared += placement.LineClear.TotalLines;
-
             RefreshObjectiveUI();
             RequestEvaluation();
         }
 
         private void HandleTrayChanged()
         {
-            if (!initialized || gameFinished)
-                return;
-
+            if (!initialized || gameFinished) return;
             RequestEvaluation();
         }
 
         private int GetObjectiveProgress()
         {
-            if (currentLevel == null)
-                return 0;
-
+            if (currentLevel == null) return 0;
             switch (currentLevel.Objective)
             {
-                case AdventureObjective.ReachScore:
-                    return scoreManager.CurrentScore;
-                case AdventureObjective.ClearLines:
-                    return totalLinesCleared;
-                case AdventureObjective.PlaceBlocks:
-                    return totalBlocksPlaced;
-                default:
-                    return 0;
+                case AdventureObjective.ReachScore: return scoreManager.CurrentScore;
+                case AdventureObjective.ClearLines: return totalLinesCleared;
+                case AdventureObjective.PlaceBlocks: return totalBlocksPlaced;
+                default: return 0;
             }
         }
 
         private string GetObjectiveLabel()
         {
-            if (currentLevel == null)
-                return string.Empty;
-
+            if (currentLevel == null) return string.Empty;
             switch (currentLevel.Objective)
             {
-                case AdventureObjective.ReachScore:
-                    return "REACH SCORE";
-                case AdventureObjective.ClearLines:
-                    return "CLEAR LINES";
-                case AdventureObjective.PlaceBlocks:
-                    return "PLACE BLOCKS";
-                default:
-                    return "OBJECTIVE";
+                case AdventureObjective.ReachScore: return "REACH SCORE";
+                case AdventureObjective.ClearLines: return "CLEAR LINES";
+                case AdventureObjective.PlaceBlocks: return "PLACE BLOCKS";
+                default: return "OBJECTIVE";
             }
         }
 
         private void RefreshObjectiveUI()
         {
-            if (currentLevel == null)
-                return;
-
+            if (currentLevel == null) return;
             int progress = GetObjectiveProgress();
             int target = currentLevel.TargetValue;
-
-            levelTitleText.text =
-                $"LEVEL {currentLevel.LevelId} — " +
+            levelTitleText.text = $"LEVEL {currentLevel.LevelId} — " +
                 currentLevel.LevelName.ToUpperInvariant();
-
             objectiveText.text = GetObjectiveLabel();
             progressValueText.text = $"{Mathf.Min(progress, target)} / {target}";
             movesText.text = $"MOVES {movesUsed} / {currentLevel.MoveLimit}";
             progressFill.fillAmount = target > 0
-                ? Mathf.Clamp01((float)progress / target)
-                : 0f;
+                ? Mathf.Clamp01((float)progress / target) : 0f;
         }
 
         private void RequestEvaluation()
         {
-            if (!isActiveAndEnabled || !initialized || gameFinished)
-                return;
-
-            if (pendingEvaluation != null)
-                StopCoroutine(pendingEvaluation);
-
+            if (!isActiveAndEnabled || !initialized || gameFinished) return;
+            if (pendingEvaluation != null) StopCoroutine(pendingEvaluation);
             pendingEvaluation = StartCoroutine(EvaluateNextFrame());
         }
 
         private IEnumerator EvaluateNextFrame()
         {
-            // Allow ScoreManager and BlockSpawner to finish their updates.
             yield return null;
             pendingEvaluation = null;
-
-            if (gameFinished || currentLevel == null)
-                yield break;
-
+            if (gameFinished || currentLevel == null) yield break;
             RefreshObjectiveUI();
 
-            // A completed objective wins, even on the final allowed move.
             if (GetObjectiveProgress() >= currentLevel.TargetValue)
             {
                 CompleteLevel();
                 yield break;
             }
-
             if (movesUsed >= currentLevel.MoveLimit)
             {
                 FailLevel("NO MOVES LEFT");
                 yield break;
             }
-
-            // Avoid treating a board that has not initialized as Game Over.
-            if (gridManager.GetCell(0, 0) == null)
-                yield break;
+            if (gridManager.GetCell(0, 0) == null) yield break;
 
             bool anyBlockAvailable = false;
             bool hasValidMove = false;
-
             foreach (BlockView block in blockSpawner.ActiveBlocks)
             {
-                if (block == null || block.Definition == null)
-                    continue;
-
+                if (block == null || block.Definition == null) continue;
                 anyBlockAvailable = true;
-
                 if (gridManager.HasAnyValidPlacement(block.Definition))
                 {
                     hasValidMove = true;
                     break;
                 }
             }
-
             if (anyBlockAvailable && !hasValidMove)
                 FailLevel("NO AVAILABLE PLACEMENTS");
         }
 
         private void CompleteLevel()
         {
-            if (gameFinished)
-                return;
-
+            if (gameFinished) return;
             gameFinished = true;
-
-            // Preserve existing star, coin, best score and unlock logic.
-            AdventureCompletionResult completion =
-                AdventureSaveService.CompleteLevel(
-                    currentLevel.LevelId,
-                    scoreManager.CurrentScore,
-                    movesUsed,
-                    currentLevel.MoveLimit);
-
-            AdventureLevelRecord record =
-                AdventureSaveService.GetLevelRecord(currentLevel.LevelId);
+            AdventureCompletionResult completion = AdventureSaveService.CompleteLevel(
+                currentLevel.LevelId, scoreManager.CurrentScore,
+                movesUsed, currentLevel.MoveLimit);
+            AdventureLevelRecord record = AdventureSaveService.GetLevelRecord(currentLevel.LevelId);
 
             if (resultCoinsText != null)
-            {
                 resultCoinsText.text = completion.CoinsEarned > 0
-                    ? $"+{completion.CoinsEarned} COINS"
-                    : "REWARD ALREADY CLAIMED";
-            }
-
+                    ? $"+{completion.CoinsEarned} COINS" : "REWARD ALREADY CLAIMED";
             if (resultBestText != null)
-            {
-                resultBestText.text =
-                    $"BEST SCORE: {record.bestScore:N0}\n" +
-                    $"BEST MOVES: {record.bestMoves}";
-            }
+                resultBestText.text = $"BEST SCORE: {record.bestScore:N0}\nBEST MOVES: {record.bestMoves}";
 
             ShowResult(true, "LEVEL COMPLETE!", "OBJECTIVE COMPLETED");
-
-            // Set stars AFTER enabling ResultPanel: a disabled child may
-            // execute UIStarRating.Awake on its first activation.
             UpdateResultStars(completion.EarnedStars, true);
-
-            Debug.Log(
-                $"[Adventure] Level {currentLevel.LevelId} completed. " +
-                $"Stars: {completion.EarnedStars}, " +
-                $"Coins: +{completion.CoinsEarned}");
+            Debug.Log($"[Adventure] Level {currentLevel.LevelId} completed. " +
+                $"Stars: {completion.EarnedStars}, Coins: +{completion.CoinsEarned}");
         }
 
         private void FailLevel(string reason)
         {
-            if (gameFinished)
-                return;
-
+            if (gameFinished) return;
             gameFinished = true;
-
-            if (resultCoinsText != null)
-                resultCoinsText.text = string.Empty;
-
-            if (resultBestText != null)
-                resultBestText.text = string.Empty;
-
+            if (resultCoinsText != null) resultCoinsText.text = string.Empty;
+            if (resultBestText != null) resultBestText.text = string.Empty;
             ShowResult(false, "LEVEL FAILED", reason);
             UpdateResultStars(0, false);
-
-            if (feedbackController != null)
-                feedbackController.PlayGameOver();
-
-            Debug.Log(
-                $"[Adventure] Level {currentLevel.LevelId} failed: {reason}");
+            if (feedbackController != null) feedbackController.PlayGameOver();
+            Debug.Log($"[Adventure] Level {currentLevel.LevelId} failed: {reason}");
         }
 
         private void UpdateResultStars(int earnedStars, bool visible)
         {
-            if (resultStarRating == null)
-                return;
-
+            if (resultStarRating == null) return;
             if (!visible)
             {
                 resultStarRating.SetStars(0);
                 resultStarRating.gameObject.SetActive(false);
                 return;
             }
-
             resultStarRating.gameObject.SetActive(true);
             resultStarRating.SetStars(Mathf.Clamp(earnedStars, 0, 3));
-
             Debug.Log($"[Adventure] Result stars: {resultStarRating.CurrentStars}");
         }
 
@@ -379,90 +313,59 @@ namespace BlockPuzzle.Adventure
         {
             if (GameManager.Instance != null)
                 GameManager.Instance.SetState(GameState.GameOver);
-
             foreach (BlockView block in blockSpawner.ActiveBlocks)
             {
-                if (block == null)
-                    continue;
-
+                if (block == null) continue;
                 BlockDragHandler drag = block.GetComponent<BlockDragHandler>();
-                if (drag != null)
-                    drag.enabled = false;
+                if (drag != null) drag.enabled = false;
             }
-
             resultTitleText.text = title;
             resultDescriptionText.text = description;
             resultScoreText.text = $"SCORE {scoreManager.CurrentScore:N0}";
-
             if (nextLevelButton != null)
-            {
-                bool canGoNext = completed &&
-                    catalog.ContainsLevel(currentLevel.LevelId + 1);
-
-                nextLevelButton.SetActive(canGoNext);
-            }
-
-            if (retryButton != null)
-                retryButton.SetActive(!completed);
-
+                nextLevelButton.SetActive(completed &&
+                    catalog.ContainsLevel(currentLevel.LevelId + 1));
+            if (retryButton != null) retryButton.SetActive(!completed);
             resultPanel.SetActive(true);
         }
 
         private void RestartLevelImmediate()
         {
-            if (currentLevel == null)
-                return;
-
+            if (currentLevel == null) return;
             AdventureSession.SelectLevel(currentLevel.LevelId);
             SceneManager.LoadScene("AdventureGame");
         }
-
-        public void RestartLevel()
-        {
-            RunAdTransition(RestartLevelImmediate);
-        }
+        public void RestartLevel() { RunAdTransition(RestartLevelImmediate); }
 
         private void NextLevelImmediate()
         {
-            if (currentLevel == null || !gameFinished)
-                return;
-
+            if (currentLevel == null || !gameFinished) return;
             int nextLevel = currentLevel.LevelId + 1;
-
             if (!catalog.ContainsLevel(nextLevel) ||
                 !AdventureProgress.IsUnlocked(nextLevel))
             {
                 ReturnToMapImmediate();
                 return;
             }
-
             AdventureSession.SelectLevel(nextLevel);
             SceneManager.LoadScene("AdventureGame");
         }
-
-        public void NextLevel()
-        {
-            RunAdTransition(NextLevelImmediate);
-        }
+        public void NextLevel() { RunAdTransition(NextLevelImmediate); }
 
         private void ReturnToMapImmediate()
         {
             AdventureSession.Clear();
             SceneManager.LoadScene("AdventureMap");
         }
-
         public void ReturnToMap()
         {
-            // Do not request an ad if a valid level never finished.
             if (!gameFinished)
             {
                 ReturnToMapImmediate();
                 return;
             }
-
             RunAdTransition(ReturnToMapImmediate);
         }
-
         private void RunAdTransition(Action transition)
         {
             if (AdMobManager.Instance == null)
@@ -470,7 +373,6 @@ namespace BlockPuzzle.Adventure
                 transition?.Invoke();
                 return;
             }
-
             AdMobManager.Instance.RunAtTransition(transition);
         }
     }

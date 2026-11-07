@@ -19,6 +19,7 @@ namespace BlockPuzzle.Blocks
         private readonly List<BlockView> activeBlocks = new();
         public IReadOnlyList<BlockView> ActiveBlocks => activeBlocks;
         public event Action TrayChanged;
+        public event Action RerollCompleted;
 
         private void Start()
         {
@@ -167,6 +168,93 @@ namespace BlockPuzzle.Blocks
                 activeBlocks[i].Initialize(replacements[i]);
 
             Debug.Log($"[BlockSpawner] Replaced {replacements.Count} remaining tray blocks.");
+            // Paid reroll invalidates a previous move's Undo snapshot.
+            RerollCompleted?.Invoke();
+            TrayChanged?.Invoke();
+            return true;
+        }
+
+        // Used by the Adventure Undo controller. A dragged block is temporarily
+        // parented to DragLayer, so use BlockDragHandler.SourceTraySlot to find
+        // which of the three slots it originally occupied.
+        public BlockDefinition[] CaptureTraySnapshot()
+        {
+            if (!HasValidSpawnReferences()) return null;
+            BlockDefinition[] snapshot = new BlockDefinition[slots.Length];
+
+            foreach (BlockView block in activeBlocks)
+            {
+                if (block == null || block.Definition == null) return null;
+                BlockDragHandler drag = block.GetComponent<BlockDragHandler>();
+                Transform originalSlot = drag != null ? drag.SourceTraySlot : block.transform.parent;
+                int slotIndex = Array.FindIndex(slots, slot => slot == originalSlot);
+                if (slotIndex < 0 || snapshot[slotIndex] != null) return null;
+                snapshot[slotIndex] = block.Definition;
+            }
+            return snapshot;
+        }
+
+        public bool IsAnyBlockDragging
+        {
+            get
+            {
+                foreach (BlockView block in activeBlocks)
+                {
+                    if (block == null) continue;
+                    BlockDragHandler drag = block.GetComponent<BlockDragHandler>();
+                    if (drag != null && drag.IsDragging) return true;
+                }
+                return false;
+            }
+        }
+
+        private bool HasValidSpawnReferences()
+        {
+            if (slots == null || slots.Length != 3 ||
+                blockViewPrefab == null || gridManager == null || dragLayer == null)
+                return false;
+            foreach (RectTransform slot in slots)
+                if (slot == null) return false;
+            return true;
+        }
+
+        public bool CanRestoreTraySnapshot(BlockDefinition[] snapshot)
+        {
+            if (!HasValidSpawnReferences() || snapshot == null ||
+                snapshot.Length != slots.Length || IsAnyBlockDragging)
+                return false;
+            foreach (BlockDefinition definition in snapshot)
+                if (definition != null && !definition.IsValid()) return false;
+            return true;
+        }
+
+        public bool RestoreTraySnapshot(BlockDefinition[] snapshot)
+        {
+            if (!CanRestoreTraySnapshot(snapshot)) return false;
+
+            ClearActiveBlocks();
+            for (int i = 0; i < slots.Length; i++)
+            {
+                BlockDefinition definition = snapshot[i];
+                if (definition == null) continue;
+
+                BlockView block = Instantiate(blockViewPrefab, slots[i]);
+                RectTransform rect = block.GetComponent<RectTransform>();
+                rect.anchorMin = Vector2.one * 0.5f;
+                rect.anchorMax = Vector2.one * 0.5f;
+                rect.pivot = Vector2.one * 0.5f;
+                rect.anchoredPosition = Vector2.zero;
+                rect.localScale = Vector3.one;
+                block.Initialize(definition);
+
+                BlockDragHandler drag = block.GetComponent<BlockDragHandler>();
+                if (drag != null)
+                    drag.Initialize(gridManager, this, dragLayer);
+                else
+                    Debug.LogError("[BlockSpawner] BlockDragHandler missing after Undo.");
+
+                activeBlocks.Add(block);
+            }
             TrayChanged?.Invoke();
             return true;
         }

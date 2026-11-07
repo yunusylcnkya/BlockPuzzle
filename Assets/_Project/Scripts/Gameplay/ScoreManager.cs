@@ -1,4 +1,3 @@
-
 using System;
 using UnityEngine;
 using BlockPuzzle.Grid;
@@ -24,6 +23,39 @@ namespace BlockPuzzle.Gameplay
 
         public event Action ScoreChanged;
 
+        // Only current-run values are restored. Persisted BestScore is historical
+        // and must never be reduced by a purchased Undo.
+        public readonly struct ScoreState
+        {
+            public readonly int Score;
+            public readonly int Combo;
+            public readonly int LastEarned;
+            public readonly int LastLines;
+            public readonly float Multiplier;
+
+            public ScoreState(int score, int combo, int earned, int lines, float multiplier)
+            {
+                Score = score;
+                Combo = combo;
+                LastEarned = earned;
+                LastLines = lines;
+                Multiplier = multiplier;
+            }
+        }
+
+        public ScoreState CaptureScoreState() => new ScoreState(
+            CurrentScore, Combo, LastEarnedPoints, LastClearedLines, CurrentMultiplier);
+
+        public void RestoreScoreState(ScoreState state)
+        {
+            CurrentScore = state.Score;
+            Combo = state.Combo;
+            LastEarnedPoints = state.LastEarned;
+            LastClearedLines = state.LastLines;
+            CurrentMultiplier = state.Multiplier;
+            ScoreChanged?.Invoke();
+        }
+
         private void Awake()
         {
             BestScore = PlayerPrefs.GetInt(bestScoreKey, 0);
@@ -45,9 +77,7 @@ namespace BlockPuzzle.Gameplay
         {
             if (gridManager == null || scoreRules == null)
             {
-                Debug.LogError(
-                    "[ScoreManager] Missing references."
-                );
+                Debug.LogError("[ScoreManager] Missing references.");
                 enabled = false;
                 return;
             }
@@ -55,64 +85,36 @@ namespace BlockPuzzle.Gameplay
             ScoreChanged?.Invoke();
         }
 
-        private void HandleBlockPlaced(
-            BlockPlacementResult result)
+        private void HandleBlockPlaced(BlockPlacementResult result)
         {
             if (result == null || scoreRules == null)
                 return;
 
             int lines = result.LineClear?.TotalLines ?? 0;
+            if (lines > 0) Combo++;
+            else Combo = 0;
 
-            if (lines > 0)
-                Combo++;
-            else
-                Combo = 0;
-
-            CurrentMultiplier =
-                scoreRules.GetComboMultiplier(Combo);
-
-            int placementPoints =
-                result.PlacedCellCount *
-                scoreRules.pointsPerCell;
-
-            int linePoints =
-                lines * scoreRules.pointsPerLine;
-
-            int multiLineBonus =
-                scoreRules.CalculateMultipleLineBonus(lines);
-
+            CurrentMultiplier = scoreRules.GetComboMultiplier(Combo);
+            int placementPoints = result.PlacedCellCount * scoreRules.pointsPerCell;
+            int linePoints = lines * scoreRules.pointsPerLine;
+            int multiLineBonus = scoreRules.CalculateMultipleLineBonus(lines);
             int clearPoints = Mathf.RoundToInt(
-                (linePoints + multiLineBonus) *
-                CurrentMultiplier
-            );
+                (linePoints + multiLineBonus) * CurrentMultiplier);
 
-            LastEarnedPoints =
-                placementPoints + clearPoints;
-
+            LastEarnedPoints = placementPoints + clearPoints;
             LastClearedLines = lines;
-
             CurrentScore += LastEarnedPoints;
 
             if (CurrentScore > BestScore)
             {
                 BestScore = CurrentScore;
-
-                PlayerPrefs.SetInt(
-                    bestScoreKey,
-                    BestScore
-                );
-
+                PlayerPrefs.SetInt(bestScoreKey, BestScore);
                 PlayerPrefs.Save();
             }
 
-            Debug.Log(
-                $"[ScoreManager] +{LastEarnedPoints} " +
-                $"Score={CurrentScore} " +
-                $"Lines={lines} " +
-                $"Combo={Combo} " +
-                $"Multiplier={CurrentMultiplier:0.##}"
-            );
-
+            Debug.Log($"[ScoreManager] +{LastEarnedPoints} " +
+                $"Score={CurrentScore} Lines={lines} Combo={Combo} " +
+                $"Multiplier={CurrentMultiplier:0.##}");
             ScoreChanged?.Invoke();
         }
 
@@ -123,7 +125,6 @@ namespace BlockPuzzle.Gameplay
             LastEarnedPoints = 0;
             LastClearedLines = 0;
             CurrentMultiplier = 1f;
-
             ScoreChanged?.Invoke();
         }
     }
