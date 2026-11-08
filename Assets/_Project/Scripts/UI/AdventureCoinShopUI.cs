@@ -9,8 +9,9 @@ using BlockPuzzle.SaveSystem;
 namespace BlockPuzzle.UI
 {
     /// <summary>
-    /// Adventure coin shop: reroll, one-step undo and extra moves.
-    /// Keep on an always-active object outside CoinShopPanel.
+    /// Adventure coin shop: reroll, one-step undo, and extra moves.
+    /// v1.3.5.4.4 adds a per-level-attempt reroll usage limit.
+    /// Keep this component on an always-active GameObject outside shopPanel.
     /// </summary>
     public sealed class AdventureCoinShopUI : MonoBehaviour
     {
@@ -42,8 +43,17 @@ namespace BlockPuzzle.UI
         [SerializeField, Min(1)] private int undoPrice = 75;
         [SerializeField, Min(1)] private int extraMovesPrice = 100;
 
+        [Header("Reroll Usage Limit - v1.3.5.4.4")]
+        [SerializeField, Range(1, 10)] private int maxRerollsPerAttempt = 3;
+        [SerializeField] private TMP_Text rerollUsageText; // Optional; assign existing RerollDescriptionText
+
         private bool processingPurchase;
         private GameState lastObservedState = (GameState)(-1);
+        private int rerollsUsed;
+
+        public int RerollsUsed => rerollsUsed;
+        public int MaxRerollsPerAttempt => maxRerollsPerAttempt;
+        private bool HasRerollsRemaining => rerollsUsed < maxRerollsPerAttempt;
 
         private void Awake()
         {
@@ -155,6 +165,14 @@ namespace BlockPuzzle.UI
                 blockSpawner == null)
                 return;
 
+            // Economy rule: a new scene / retry begins a new level attempt.
+            // Only successful rerolls consume one use.
+            if (!HasRerollsRemaining)
+            {
+                SetStatus("REROLL LIMIT REACHED");
+                RefreshUI();
+                return;
+            }
             if (!blockSpawner.CanRerollRemainingBlocks())
             {
                 SetStatus("NO AVAILABLE REROLL");
@@ -174,6 +192,8 @@ namespace BlockPuzzle.UI
             {
                 success = blockSpawner.TryRerollRemainingBlocks(
                     () => AdventureSaveService.TrySpendCoins(rerollPrice));
+                if (success)
+                    rerollsUsed++;
             }
             finally
             {
@@ -182,7 +202,8 @@ namespace BlockPuzzle.UI
 
             if (success)
             {
-                Debug.Log($"[CoinShop] Tray rerolled for {rerollPrice} coins.");
+                Debug.Log($"[CoinShop] Tray rerolled for {rerollPrice} coins. " +
+                    $"Uses: {rerollsUsed}/{maxRerollsPerAttempt}.");
                 CloseShop();
             }
             else
@@ -300,6 +321,9 @@ namespace BlockPuzzle.UI
                 undoPriceText.text = $"{undoPrice} COINS";
             if (extraMovesPriceText != null)
                 extraMovesPriceText.text = $"{extraMovesPrice} COINS";
+            if (rerollUsageText != null)
+                rerollUsageText.text =
+                    $"REPLACE REMAINING BLOCKS ({rerollsUsed}/{maxRerollsPerAttempt})";
             if (extraMovesDescriptionText != null && adventureGame != null)
                 extraMovesDescriptionText.text =
                     $"+{adventureGame.ExtraMovesPerPurchase} MOVES " +
@@ -308,7 +332,7 @@ namespace BlockPuzzle.UI
 
             bool canShop = CanShop();
             bool canOpen = CanOpenShop();
-            bool canReroll = canShop && blockSpawner != null &&
+            bool canReroll = canShop && HasRerollsRemaining && blockSpawner != null &&
                              blockSpawner.CanRerollRemainingBlocks();
 
             if (openShopButton != null)

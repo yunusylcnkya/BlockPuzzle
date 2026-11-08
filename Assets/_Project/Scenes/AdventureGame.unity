@@ -8998,6 +8998,8 @@ MonoBehaviour:
   rerollPrice: 50
   undoPrice: 75
   extraMovesPrice: 100
+  maxRerollsPerAttempt: 3
+  rerollUsageText: {fileID: 417565300}
 --- !u!1 &1879476897
 GameObject:
   m_ObjectHideFlags: 0
