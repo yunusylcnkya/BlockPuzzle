@@ -12,7 +12,8 @@ namespace BlockPuzzle.Monetization
     public sealed class AdMobManager : MonoBehaviour
     {
         public static AdMobManager Instance { get; private set; }
-
+        public bool IsSdkInitialized => sdkInitialized;
+        public bool UseTestAds => useTestAds;
         private const string AndroidTestInterstitialId =
             "ca-app-pub-3940256099942544/1033173712";
 

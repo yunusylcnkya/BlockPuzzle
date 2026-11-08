@@ -409,6 +409,7 @@ GameObject:
   m_Component:
   - component: {fileID: 1719962708}
   - component: {fileID: 1719962709}
+  - component: {fileID: 1719962710}
   m_Layer: 0
   m_Name: AdMobManager
   m_TagString: Untagged
@@ -449,6 +450,22 @@ MonoBehaviour:
   minimumSecondsBetweenAds: 120
   androidRewardedId: 
   rewardedCoinAmount: 50
+--- !u!114 &1719962710
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1719962707}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 430227e5bd400ac4393059a7af2550f7, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::BlockPuzzle.Monetization.AdMobAdaptiveBanner
+  enableBanner: 1
+  androidBannerId: 
+  showOnMainMenu: 1
+  showOnAdventureMap: 1
 --- !u!1 &2099286281
 GameObject:
   m_ObjectHideFlags: 0
@@ -493,6 +510,12 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 5a7e82a3d514915459aab52c5cd8e3f7, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::BlockPuzzle.Core.GameManager
+  enable120FPS: 1
+  automaticPerformanceFallback: 1
+  refreshProbeSeconds: 5
+  performanceCheckSeconds: 12
+  minimumStableFPS: 96
+  consecutiveLowSampleWindows: 2
 --- !u!1660057539 &9223372036854775807
 SceneRoots:
   m_ObjectHideFlags: 0
