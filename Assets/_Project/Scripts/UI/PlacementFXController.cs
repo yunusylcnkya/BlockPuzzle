@@ -1,8 +1,8 @@
-
 using System.Collections;
 using UnityEngine;
 using UnityEngine.UI;
 using BlockPuzzle.Grid;
+using BlockPuzzle.Blocks;
 
 namespace BlockPuzzle.UI
 {
@@ -32,8 +32,15 @@ namespace BlockPuzzle.UI
         [SerializeField]
         private Color particleColor =
             new Color32(255, 213, 107, 255);
+
         [SerializeField] private RectTransform boardContainer;
         private Canvas rootCanvas;
+
+        // BlockDragHandler snaps its RectTransform to the target placement center
+        // BEFORE BeforeValidPlacement is raised. GridManager.BlockPlaced fires
+        // synchronously during the same placement operation.
+        private bool hasPlacementWorldCenter;
+        private Vector3 placementWorldCenter;
 
         private void Awake()
         {
@@ -45,12 +52,19 @@ namespace BlockPuzzle.UI
         {
             if (gridManager != null)
                 gridManager.BlockPlaced += OnBlockPlaced;
+
+            BlockDragHandler.BeforeValidPlacement += CapturePlacementCenter;
+            BlockDragHandler.AfterPlacement += ClearPlacementCenter;
         }
 
         private void OnDisable()
         {
             if (gridManager != null)
                 gridManager.BlockPlaced -= OnBlockPlaced;
+
+            BlockDragHandler.BeforeValidPlacement -= CapturePlacementCenter;
+            BlockDragHandler.AfterPlacement -= ClearPlacementCenter;
+            hasPlacementWorldCenter = false;
 
             StopAllCoroutines();
 
@@ -63,24 +77,48 @@ namespace BlockPuzzle.UI
             }
         }
 
+        private void CapturePlacementCenter(BlockDragHandler drag)
+        {
+            if (drag == null || gridManager == null || fxLayer == null)
+                return;
+
+            // The drag object is already snapped to the selected placement.
+            // Its UI pivot is centered on the block's placement rectangle.
+            placementWorldCenter = drag.transform.position;
+            hasPlacementWorldCenter = true;
+        }
+
+        private void ClearPlacementCenter(bool placed)
+        {
+            // Also clears a snapshot if an attempted placement fails.
+            hasPlacementWorldCenter = false;
+        }
+
         private void OnBlockPlaced(BlockPlacementResult result)
         {
-            if (result == null || gridManager == null ||
-                fxLayer == null)
+            if (result == null || gridManager == null || fxLayer == null)
                 return;
 
-            if (boardContainer == null)
+            // Use the real placed-block position, never the board center.
+            // Keep the previous board-center fallback for placements initiated
+            // by other systems without BlockDragHandler.
+            Vector3 worldPosition;
+            if (hasPlacementWorldCenter)
+            {
+                worldPosition = placementWorldCenter;
+                hasPlacementWorldCenter = false;
+            }
+            else if (boardContainer != null)
+            {
+                worldPosition = boardContainer.TransformPoint(
+                    boardContainer.rect.center);
+            }
+            else
+            {
                 return;
-
-            Vector3 worldPosition =
-                boardContainer.TransformPoint(
-                    boardContainer.rect.center
-                );
-
-            Vector2 localPosition;
+            }
 
             Camera uiCamera = null;
-
             if (rootCanvas != null &&
                 rootCanvas.renderMode != RenderMode.ScreenSpaceOverlay)
             {
@@ -89,33 +127,22 @@ namespace BlockPuzzle.UI
 
             Vector2 screenPosition =
                 RectTransformUtility.WorldToScreenPoint(
-                    uiCamera,
-                    worldPosition
-                );
+                    uiCamera, worldPosition);
 
             if (!RectTransformUtility.ScreenPointToLocalPointInRectangle(
-                fxLayer,
-                screenPosition,
-                uiCamera,
-                out localPosition))
+                fxLayer, screenPosition, uiCamera, out Vector2 localPosition))
             {
                 return;
             }
 
-            int count = Mathf.Min(
-                particlesPerBurst,
-                maxParticlesPerMove
-            );
-
-            // Stronger feedback for multiple cleared lines.
+            int count = Mathf.Min(particlesPerBurst, maxParticlesPerMove);
             if (result.LineClear != null &&
                 result.LineClear.HasClearedLines)
             {
                 count = Mathf.Min(
                     maxParticlesPerMove,
                     particlesPerBurst *
-                    Mathf.Max(1, result.LineClear.TotalLines)
-                );
+                    Mathf.Max(1, result.LineClear.TotalLines));
             }
 
             for (int i = 0; i < count; i++)
@@ -124,47 +151,33 @@ namespace BlockPuzzle.UI
             }
         }
 
-        private void SpawnParticle(
-            Vector2 center,
-            int index,
-            int total)
+        private void SpawnParticle(Vector2 center, int index, int total)
         {
             GameObject go = new GameObject(
                 "FX_Particle",
                 typeof(RectTransform),
                 typeof(CanvasRenderer),
-                typeof(Image)
-            );
+                typeof(Image));
 
-            RectTransform rect =
-                go.GetComponent<RectTransform>();
-
+            RectTransform rect = go.GetComponent<RectTransform>();
             rect.SetParent(fxLayer, false);
-
             rect.anchorMin = new Vector2(0.5f, 0.5f);
             rect.anchorMax = new Vector2(0.5f, 0.5f);
             rect.pivot = new Vector2(0.5f, 0.5f);
-
             rect.sizeDelta = Vector2.one * particleSize;
             rect.anchoredPosition = center;
 
             Image image = go.GetComponent<Image>();
-
             image.sprite = particleSprite;
             image.color = particleColor;
             image.raycastTarget = false;
 
-            float angle =
-                index * Mathf.PI * 2f / Mathf.Max(1, total);
-
+            float angle = index * Mathf.PI * 2f / Mathf.Max(1, total);
             Vector2 direction = new Vector2(
-                Mathf.Cos(angle),
-                Mathf.Sin(angle)
-            );
+                Mathf.Cos(angle), Mathf.Sin(angle));
 
             StartCoroutine(
-                AnimateParticle(rect, image, center, direction)
-            );
+                AnimateParticle(rect, image, center, direction));
         }
 
         private IEnumerator AnimateParticle(
@@ -181,21 +194,16 @@ namespace BlockPuzzle.UI
                     yield break;
 
                 elapsed += Time.unscaledDeltaTime;
-
                 float t = Mathf.Clamp01(elapsed / duration);
-
-                float eased = 1f -
-                    Mathf.Pow(1f - t, 2f);
+                float eased = 1f - Mathf.Pow(1f - t, 2f);
 
                 rect.anchoredPosition =
                     start + direction * travelDistance * eased;
 
-                rect.localScale =
-                    Vector3.one * (1f - t * 0.65f);
+                rect.localScale = Vector3.one * (1f - t * 0.65f);
 
                 Color color = particleColor;
                 color.a = 1f - t;
-
                 image.color = color;
 
                 yield return null;

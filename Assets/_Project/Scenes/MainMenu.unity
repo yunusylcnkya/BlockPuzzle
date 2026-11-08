@@ -2177,8 +2177,8 @@ MonoBehaviour:
   m_OnClick:
     m_PersistentCalls:
       m_Calls:
-      - m_Target: {fileID: 621335051}
-        m_TargetAssemblyTypeName: BlockPuzzle.UI.MainMenuController, Assembly-CSharp
+      - m_Target: {fileID: 498022175}
+        m_TargetAssemblyTypeName: BlockPuzzle.UI.GameSettingsUI, Assembly-CSharp
         m_MethodName: OpenSettings
         m_Mode: 1
         m_Arguments:
