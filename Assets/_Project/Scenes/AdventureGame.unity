@@ -871,6 +871,7 @@ GameObject:
   - component: {fileID: 218375471}
   - component: {fileID: 218375470}
   - component: {fileID: 218375469}
+  - component: {fileID: 218375472}
   m_Layer: 5
   m_Name: RerollPurchaseButton
   m_TagString: Untagged
@@ -980,6 +981,20 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 218375467}
   m_CullTransparentMesh: 1
+--- !u!114 &218375472
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 218375467}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: b72342c9e4fe9934aa1c4a61b187ad48, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::BlockPuzzle.UI.UIButtonPressEffect
+  pressedScale: 0.94
+  animationDuration: 0.1
 --- !u!1 &239685428
 GameObject:
   m_ObjectHideFlags: 0
@@ -1187,10 +1202,10 @@ RectTransform:
   - {fileID: 1639302160}
   m_Father: {fileID: 1257800844}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
-  m_AnchorMin: {x: 0, y: 0}
-  m_AnchorMax: {x: 0, y: 0}
-  m_AnchoredPosition: {x: 0, y: 0}
-  m_SizeDelta: {x: 0, y: 90}
+  m_AnchorMin: {x: 0, y: 1}
+  m_AnchorMax: {x: 0, y: 1}
+  m_AnchoredPosition: {x: 325, y: -255}
+  m_SizeDelta: {x: 650, y: 90}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &265975441
 MonoBehaviour:
@@ -1741,6 +1756,7 @@ GameObject:
   - component: {fileID: 318724355}
   - component: {fileID: 318724354}
   - component: {fileID: 318724353}
+  - component: {fileID: 318724356}
   m_Layer: 5
   m_Name: BackButton
   m_TagString: Untagged
@@ -1861,6 +1877,20 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 318724351}
   m_CullTransparentMesh: 1
+--- !u!114 &318724356
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 318724351}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: b72342c9e4fe9934aa1c4a61b187ad48, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::BlockPuzzle.UI.UIButtonPressEffect
+  pressedScale: 0.94
+  animationDuration: 0.1
 --- !u!1 &323048145
 GameObject:
   m_ObjectHideFlags: 0
@@ -2254,6 +2284,7 @@ GameObject:
   - component: {fileID: 421764129}
   - component: {fileID: 421764128}
   - component: {fileID: 421764127}
+  - component: {fileID: 421764130}
   m_Layer: 5
   m_Name: 'ShopOpenButton          '
   m_TagString: Untagged
@@ -2375,6 +2406,20 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 421764125}
   m_CullTransparentMesh: 1
+--- !u!114 &421764130
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 421764125}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: b72342c9e4fe9934aa1c4a61b187ad48, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::BlockPuzzle.UI.UIButtonPressEffect
+  pressedScale: 0.94
+  animationDuration: 0.1
 --- !u!1 &445235698
 GameObject:
   m_ObjectHideFlags: 0
@@ -2736,6 +2781,7 @@ GameObject:
   - component: {fileID: 499493130}
   - component: {fileID: 499493129}
   - component: {fileID: 499493128}
+  - component: {fileID: 499493131}
   m_Layer: 5
   m_Name: CloseButton
   m_TagString: Untagged
@@ -2807,7 +2853,7 @@ MonoBehaviour:
   m_OnClick:
     m_PersistentCalls:
       m_Calls:
-      - m_Target: {fileID: 0}
+      - m_Target: {fileID: 947990170}
         m_TargetAssemblyTypeName: BlockPuzzle.UI.GameSettingsUI, Assembly-CSharp
         m_MethodName: CloseSettings
         m_Mode: 1
@@ -2857,6 +2903,20 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 499493126}
   m_CullTransparentMesh: 1
+--- !u!114 &499493131
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 499493126}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: b72342c9e4fe9934aa1c4a61b187ad48, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::BlockPuzzle.UI.UIButtonPressEffect
+  pressedScale: 0.94
+  animationDuration: 0.1
 --- !u!1 &515415346
 GameObject:
   m_ObjectHideFlags: 0
@@ -3339,6 +3399,8 @@ GameObject:
   - component: {fileID: 609260513}
   - component: {fileID: 609260515}
   - component: {fileID: 609260514}
+  - component: {fileID: 609260517}
+  - component: {fileID: 609260516}
   m_Layer: 5
   m_Name: CoinShopPanel
   m_TagString: Untagged
@@ -3404,6 +3466,33 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 609260512}
   m_CullTransparentMesh: 1
+--- !u!114 &609260516
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 609260512}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 01fedc4c72d44a540b4e2ab5afda8b03, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::BlockPuzzle.UI.UIModalOpenAnimator
+  card: {fileID: 899378599}
+  duration: 0.22
+  initialScale: 0.94
+--- !u!225 &609260517
+CanvasGroup:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 609260512}
+  m_Enabled: 1
+  m_Alpha: 1
+  m_Interactable: 1
+  m_BlocksRaycasts: 1
+  m_IgnoreParentGroups: 0
 --- !u!1 &663510278
 GameObject:
   m_ObjectHideFlags: 0
@@ -3827,6 +3916,7 @@ GameObject:
   - component: {fileID: 696358064}
   - component: {fileID: 696358063}
   - component: {fileID: 696358062}
+  - component: {fileID: 696358065}
   m_Layer: 5
   m_Name: ShopCloseButton
   m_TagString: Untagged
@@ -3936,6 +4026,20 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 696358060}
   m_CullTransparentMesh: 1
+--- !u!114 &696358065
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 696358060}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: b72342c9e4fe9934aa1c4a61b187ad48, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::BlockPuzzle.UI.UIButtonPressEffect
+  pressedScale: 0.94
+  animationDuration: 0.1
 --- !u!1 &711345883
 GameObject:
   m_ObjectHideFlags: 0
@@ -5417,6 +5521,8 @@ GameObject:
   - component: {fileID: 1012824745}
   - component: {fileID: 1012824747}
   - component: {fileID: 1012824746}
+  - component: {fileID: 1012824749}
+  - component: {fileID: 1012824748}
   m_Layer: 5
   m_Name: SettingsPanel
   m_TagString: Untagged
@@ -5482,6 +5588,33 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1012824744}
   m_CullTransparentMesh: 1
+--- !u!114 &1012824748
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1012824744}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 01fedc4c72d44a540b4e2ab5afda8b03, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::BlockPuzzle.UI.UIModalOpenAnimator
+  card: {fileID: 1074634604}
+  duration: 0.22
+  initialScale: 0.94
+--- !u!225 &1012824749
+CanvasGroup:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1012824744}
+  m_Enabled: 1
+  m_Alpha: 1
+  m_Interactable: 1
+  m_BlocksRaycasts: 1
+  m_IgnoreParentGroups: 0
 --- !u!1 &1059493048
 GameObject:
   m_ObjectHideFlags: 0
@@ -7279,13 +7412,13 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::BlockPuzzle.UI.GameSettingsUI
   settingsPanel: {fileID: 1012824744}
-  soundToggle: {fileID: 0}
-  volumeSlider: {fileID: 0}
-  hapticsToggle: {fileID: 0}
-  volumeValueText: {fileID: 0}
-  musicToggle: {fileID: 0}
-  musicVolumeSlider: {fileID: 0}
-  musicVolumeText: {fileID: 0}
+  soundToggle: {fileID: 1537467868}
+  volumeSlider: {fileID: 1650352089}
+  hapticsToggle: {fileID: 1165060704}
+  volumeValueText: {fileID: 1571439565}
+  musicToggle: {fileID: 1293552986}
+  musicVolumeSlider: {fileID: 748542261}
+  musicVolumeText: {fileID: 1571439565}
 --- !u!1 &1367154508
 GameObject:
   m_ObjectHideFlags: 0
@@ -7873,7 +8006,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!224 &1435523584
 RectTransform:
   m_ObjectHideFlags: 0
@@ -8681,10 +8814,10 @@ RectTransform:
   - {fileID: 445235699}
   m_Father: {fileID: 1257800844}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
-  m_AnchorMin: {x: 0, y: 0}
-  m_AnchorMax: {x: 0, y: 0}
-  m_AnchoredPosition: {x: 0, y: 0}
-  m_SizeDelta: {x: 0, y: 90}
+  m_AnchorMin: {x: 0, y: 1}
+  m_AnchorMax: {x: 0, y: 1}
+  m_AnchoredPosition: {x: 325, y: -45}
+  m_SizeDelta: {x: 650, y: 90}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &1584062690
 MonoBehaviour:
@@ -8945,35 +9078,35 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 6027830597743278529, guid: e294fa0d357a2da40b001e4d0c8cd544, type: 3}
       propertyPath: m_AnchorMax.y
-      value: 0
+      value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 6027830597743278529, guid: e294fa0d357a2da40b001e4d0c8cd544, type: 3}
       propertyPath: m_AnchorMin.y
-      value: 0
+      value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 6027830597743278529, guid: e294fa0d357a2da40b001e4d0c8cd544, type: 3}
       propertyPath: m_AnchoredPosition.x
-      value: 0
+      value: 48
       objectReference: {fileID: 0}
     - target: {fileID: 6027830597743278529, guid: e294fa0d357a2da40b001e4d0c8cd544, type: 3}
       propertyPath: m_AnchoredPosition.y
-      value: 0
+      value: -35
       objectReference: {fileID: 0}
     - target: {fileID: 6381898846383289648, guid: e294fa0d357a2da40b001e4d0c8cd544, type: 3}
       propertyPath: m_AnchorMax.y
-      value: 0
+      value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 6381898846383289648, guid: e294fa0d357a2da40b001e4d0c8cd544, type: 3}
       propertyPath: m_AnchorMin.y
-      value: 0
+      value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 6381898846383289648, guid: e294fa0d357a2da40b001e4d0c8cd544, type: 3}
       propertyPath: m_AnchoredPosition.x
-      value: 0
+      value: 120
       objectReference: {fileID: 0}
     - target: {fileID: 6381898846383289648, guid: e294fa0d357a2da40b001e4d0c8cd544, type: 3}
       propertyPath: m_AnchoredPosition.y
-      value: 0
+      value: -35
       objectReference: {fileID: 0}
     - target: {fileID: 6696041509625944739, guid: e294fa0d357a2da40b001e4d0c8cd544, type: 3}
       propertyPath: m_Pivot.x
@@ -9057,24 +9190,27 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 8135775462927277708, guid: e294fa0d357a2da40b001e4d0c8cd544, type: 3}
       propertyPath: m_AnchorMax.y
-      value: 0
+      value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 8135775462927277708, guid: e294fa0d357a2da40b001e4d0c8cd544, type: 3}
       propertyPath: m_AnchorMin.y
-      value: 0
+      value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 8135775462927277708, guid: e294fa0d357a2da40b001e4d0c8cd544, type: 3}
       propertyPath: m_AnchoredPosition.x
-      value: 0
+      value: 192
       objectReference: {fileID: 0}
     - target: {fileID: 8135775462927277708, guid: e294fa0d357a2da40b001e4d0c8cd544, type: 3}
       propertyPath: m_AnchoredPosition.y
-      value: 0
+      value: -35
       objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects: []
-    m_AddedComponents: []
+    m_AddedComponents:
+    - targetCorrespondingSourceObject: {fileID: 3584036769439544141, guid: e294fa0d357a2da40b001e4d0c8cd544, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 1603142666}
   m_SourcePrefab: {fileID: 100100000, guid: e294fa0d357a2da40b001e4d0c8cd544, type: 3}
 --- !u!224 &1603142663 stripped
 RectTransform:
@@ -9086,12 +9222,36 @@ MonoBehaviour:
   m_CorrespondingSourceObject: {fileID: 6764417818916638638, guid: e294fa0d357a2da40b001e4d0c8cd544, type: 3}
   m_PrefabInstance: {fileID: 1603142662}
   m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 0}
+  m_GameObject: {fileID: 1603142665}
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 86b12773635ec57479355f2166d35d0f, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::BlockPuzzle.UI.UIStarRating
+--- !u!1 &1603142665 stripped
+GameObject:
+  m_CorrespondingSourceObject: {fileID: 3584036769439544141, guid: e294fa0d357a2da40b001e4d0c8cd544, type: 3}
+  m_PrefabInstance: {fileID: 1603142662}
+  m_PrefabAsset: {fileID: 0}
+--- !u!114 &1603142666
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1603142665}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 96ae23fbf5ef0454aa291b0c92422648, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::BlockPuzzle.UI.ResultStarRevealAnimator
+  stars:
+  - {fileID: 0}
+  - {fileID: 0}
+  - {fileID: 0}
+  starDuration: 0.18
+  delayBetweenStars: 0.1
+  overshootScale: 1.13
 --- !u!1 &1615951249
 GameObject:
   m_ObjectHideFlags: 0
@@ -9104,6 +9264,7 @@ GameObject:
   - component: {fileID: 1615951253}
   - component: {fileID: 1615951252}
   - component: {fileID: 1615951251}
+  - component: {fileID: 1615951254}
   m_Layer: 5
   m_Name: UndoPurchaseButton
   m_TagString: Untagged
@@ -9213,6 +9374,20 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1615951249}
   m_CullTransparentMesh: 1
+--- !u!114 &1615951254
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1615951249}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: b72342c9e4fe9934aa1c4a61b187ad48, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::BlockPuzzle.UI.UIButtonPressEffect
+  pressedScale: 0.94
+  animationDuration: 0.1
 --- !u!1 &1624498457
 GameObject:
   m_ObjectHideFlags: 0
@@ -10130,10 +10305,10 @@ RectTransform:
   - {fileID: 1542269973}
   m_Father: {fileID: 1257800844}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
-  m_AnchorMin: {x: 0, y: 0}
-  m_AnchorMax: {x: 0, y: 0}
-  m_AnchoredPosition: {x: 0, y: 0}
-  m_SizeDelta: {x: 0, y: 90}
+  m_AnchorMin: {x: 0, y: 1}
+  m_AnchorMax: {x: 0, y: 1}
+  m_AnchoredPosition: {x: 325, y: -360}
+  m_SizeDelta: {x: 650, y: 90}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &1798402452
 MonoBehaviour:
@@ -10255,6 +10430,7 @@ GameObject:
   - component: {fileID: 1801783295}
   - component: {fileID: 1801783294}
   - component: {fileID: 1801783293}
+  - component: {fileID: 1801783296}
   m_Layer: 5
   m_Name: SettingsButton
   m_TagString: Untagged
@@ -10375,6 +10551,20 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1801783291}
   m_CullTransparentMesh: 1
+--- !u!114 &1801783296
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1801783291}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: b72342c9e4fe9934aa1c4a61b187ad48, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::BlockPuzzle.UI.UIButtonPressEffect
+  pressedScale: 0.94
+  animationDuration: 0.1
 --- !u!1 &1867536657
 GameObject:
   m_ObjectHideFlags: 0
@@ -10861,10 +11051,10 @@ RectTransform:
   - {fileID: 683834996}
   m_Father: {fileID: 1257800844}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
-  m_AnchorMin: {x: 0, y: 0}
-  m_AnchorMax: {x: 0, y: 0}
-  m_AnchoredPosition: {x: 0, y: 0}
-  m_SizeDelta: {x: 0, y: 90}
+  m_AnchorMin: {x: 0, y: 1}
+  m_AnchorMax: {x: 0, y: 1}
+  m_AnchoredPosition: {x: 325, y: -150}
+  m_SizeDelta: {x: 650, y: 90}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &2107861869
 MonoBehaviour:
@@ -10986,6 +11176,7 @@ GameObject:
   - component: {fileID: 2109109107}
   - component: {fileID: 2109109106}
   - component: {fileID: 2109109105}
+  - component: {fileID: 2109109108}
   m_Layer: 5
   m_Name: ExtraMovesPurchaseButton
   m_TagString: Untagged
@@ -11095,6 +11286,20 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 2109109103}
   m_CullTransparentMesh: 1
+--- !u!114 &2109109108
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2109109103}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: b72342c9e4fe9934aa1c4a61b187ad48, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::BlockPuzzle.UI.UIButtonPressEffect
+  pressedScale: 0.94
+  animationDuration: 0.1
 --- !u!1660057539 &9223372036854775807
 SceneRoots:
   m_ObjectHideFlags: 0

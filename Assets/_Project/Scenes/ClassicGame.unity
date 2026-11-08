@@ -905,6 +905,7 @@ GameObject:
   - component: {fileID: 318724355}
   - component: {fileID: 318724354}
   - component: {fileID: 318724353}
+  - component: {fileID: 318724356}
   m_Layer: 5
   m_Name: BackButton
   m_TagString: Untagged
@@ -1025,6 +1026,20 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 318724351}
   m_CullTransparentMesh: 1
+--- !u!114 &318724356
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 318724351}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: b72342c9e4fe9934aa1c4a61b187ad48, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::BlockPuzzle.UI.UIButtonPressEffect
+  pressedScale: 0.94
+  animationDuration: 0.1
 --- !u!1 &323048145
 GameObject:
   m_ObjectHideFlags: 0
@@ -3303,6 +3318,8 @@ GameObject:
   - component: {fileID: 1012824745}
   - component: {fileID: 1012824747}
   - component: {fileID: 1012824746}
+  - component: {fileID: 1012824749}
+  - component: {fileID: 1012824748}
   m_Layer: 5
   m_Name: SettingsPanel
   m_TagString: Untagged
@@ -3368,6 +3385,33 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1012824744}
   m_CullTransparentMesh: 1
+--- !u!114 &1012824748
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1012824744}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 01fedc4c72d44a540b4e2ab5afda8b03, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::BlockPuzzle.UI.UIModalOpenAnimator
+  card: {fileID: 1325626956}
+  duration: 0.22
+  initialScale: 0.94
+--- !u!225 &1012824749
+CanvasGroup:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1012824744}
+  m_Enabled: 1
+  m_Alpha: 1
+  m_Interactable: 1
+  m_BlocksRaycasts: 1
+  m_IgnoreParentGroups: 0
 --- !u!1 &1025782149
 GameObject:
   m_ObjectHideFlags: 0
@@ -5107,6 +5151,7 @@ GameObject:
   - component: {fileID: 1580761474}
   - component: {fileID: 1580761473}
   - component: {fileID: 1580761472}
+  - component: {fileID: 1580761475}
   m_Layer: 5
   m_Name: CloseButton
   m_TagString: Untagged
@@ -5228,6 +5273,20 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1580761470}
   m_CullTransparentMesh: 1
+--- !u!114 &1580761475
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1580761470}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: b72342c9e4fe9934aa1c4a61b187ad48, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::BlockPuzzle.UI.UIButtonPressEffect
+  pressedScale: 0.94
+  animationDuration: 0.1
 --- !u!1 &1586604720
 GameObject:
   m_ObjectHideFlags: 0
@@ -5573,6 +5632,7 @@ GameObject:
   - component: {fileID: 1801783295}
   - component: {fileID: 1801783294}
   - component: {fileID: 1801783293}
+  - component: {fileID: 1801783296}
   m_Layer: 5
   m_Name: SettingsButton
   m_TagString: Untagged
@@ -5693,6 +5753,20 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1801783291}
   m_CullTransparentMesh: 1
+--- !u!114 &1801783296
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1801783291}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: b72342c9e4fe9934aa1c4a61b187ad48, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::BlockPuzzle.UI.UIButtonPressEffect
+  pressedScale: 0.94
+  animationDuration: 0.1
 --- !u!1 &1834696506
 GameObject:
   m_ObjectHideFlags: 0
