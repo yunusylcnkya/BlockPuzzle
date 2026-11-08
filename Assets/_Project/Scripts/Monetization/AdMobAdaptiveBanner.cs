@@ -56,6 +56,40 @@ namespace BlockPuzzle.Monetization
             RefreshBannerState();
         }
 
+        private void PositionBannerAboveNavigationBar()
+        {
+#if UNITY_ANDROID && !UNITY_EDITOR
+    if (bannerView == null)
+        return;
+
+    float scale = MobileAds.Utils.GetDeviceScale();
+
+    if (scale <= 0f)
+        scale = 1f;
+
+    float bannerHeightPixels =
+        bannerView.GetHeightInPixels();
+
+    if (bannerHeightPixels <= 0f)
+        return;
+
+    Rect safeArea = Screen.safeArea;
+
+    float yPixels =
+        Screen.height -
+        safeArea.yMin -
+        bannerHeightPixels;
+
+    int xDp = Mathf.FloorToInt(
+        safeArea.xMin / scale);
+
+    int yDp = Mathf.Max(0, Mathf.FloorToInt(
+        yPixels / scale));
+
+    bannerView.SetPosition(xDp, yDp);
+#endif
+        }
+
         private void Update()
         {
             if (Time.realtimeSinceStartup < nextVisibilityCheck) return;
@@ -227,13 +261,24 @@ namespace BlockPuzzle.Monetization
             Debug.LogWarning($"[Banner] Retry in {seconds:0}s.");
         }
 
+
         private void ShowBanner()
         {
-            if (bannerView == null || !bannerLoaded || bannerVisible) return;
+            if (bannerView == null ||
+                !bannerLoaded ||
+                bannerVisible)
+                return;
+
+            PositionBannerAboveNavigationBar();
+
             bannerView.Show();
             bannerVisible = true;
-            Debug.Log("[Banner] Visible: " + SceneManager.GetActiveScene().name);
+
+            Debug.Log(
+                "[Banner] Visible: " +
+                SceneManager.GetActiveScene().name);
         }
+
 
         private void HideBanner()
         {
@@ -269,4 +314,5 @@ namespace BlockPuzzle.Monetization
             DestroyBanner();
         }
     }
+
 }
