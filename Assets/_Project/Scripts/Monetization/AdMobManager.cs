@@ -1,4 +1,3 @@
-
 using System;
 using GoogleMobileAds;
 using GoogleMobileAds.Api;
@@ -9,70 +8,90 @@ using UnityEngine;
 
 namespace BlockPuzzle.Monetization
 {
+    /// <summary>
+    /// Persistent AdMob controller. Consent, ad caching, retries and transitions
+    /// are managed here. Existing scene-facing methods and events are retained.
+    /// </summary>
+    [DisallowMultipleComponent]
     public sealed class AdMobManager : MonoBehaviour
     {
         public static AdMobManager Instance { get; private set; }
-        public bool IsSdkInitialized => sdkInitialized;
-        public bool UseTestAds => useTestAds;
+
         private const string AndroidTestInterstitialId =
             "ca-app-pub-3940256099942544/1033173712";
+        private const string AndroidTestRewardedId =
+            "ca-app-pub-3940256099942544/5224354917";
+
+        private const float CacheLifetimeSeconds = 3500f; // Refresh before 1 hour.
+        private const float RetryFirstSeconds = 15f;
+        private const float RetryMaximumSeconds = 120f;
 
         [Header("Ad Configuration")]
         [SerializeField] private bool useTestAds = true;
-
         [SerializeField] private string androidInterstitialId = "";
 
         [Header("Frequency Rules")]
         [SerializeField, Min(1)] private int transitionsPerAd = 3;
-
-        [SerializeField, Min(0f)]
-        private float minimumSecondsBetweenAds = 120f;
+        [SerializeField, Min(0f)] private float minimumSecondsBetweenAds = 120f;
 
         [Header("Rewarded Ads")]
         [SerializeField] private string androidRewardedId = "";
+        [SerializeField, Min(1)] private int rewardedCoinAmount = 50;
 
-        [SerializeField, Min(1)]
-        private int rewardedCoinAmount = 50;
-
-        private const string AndroidTestRewardedId =
-            "ca-app-pub-3940256099942544/5224354917";
-
+        private InterstitialAd interstitialAd;
         private RewardedAd rewardedAd;
-
+        private bool sdkInitialized;
+        private bool sdkInitializing;
+        private bool loadingAd;
         private bool loadingRewarded;
+        private bool showingAd;
         private bool showingRewarded;
         private bool rewardGrantedForCurrentAd;
+        private bool privacyOptionsOpen;
+        private bool applicationPaused;
+        private bool? lastConsentAllowed;
+        private bool clearAdsAfterFullScreen;
+        private int adGeneration;
+        private float interstitialLoadedAt;
+        private float rewardedLoadedAt;
+        private float nextInterstitialRetryTime;
+        private float nextRewardedRetryTime;
+        private int interstitialFailureCount;
+        private int rewardedFailureCount;
+        private float nextMaintenanceTime;
+        private float nextConsentRetryTime;
+        private int consentFailureCount;
+        private bool consentRequestInProgress;
+        private float nextSdkRetryTime;
+        private int sdkFailureCount;
+        private int transitionCount;
+        private float lastAdTime = -100000f;
+        private Action pendingContinuation;
+        private Action deferredRewardedContinuation;
 
-        // Prevent an interstitial from opening during a reward ad.
-        public bool IsFullScreenAdShowing =>
-            showingAd || showingRewarded;
-
+        public bool IsSdkInitialized => sdkInitialized;
+        public bool UseTestAds => useTestAds;
+        public bool IsPrivacyOptionsOpen => privacyOptionsOpen;
+        // The banner uses this to invalidate an ad loaded with earlier privacy choices.
+        public int ConsentRevision { get; private set; }
+        public bool IsFullScreenAdShowing => showingAd || showingRewarded;
         public bool IsRewardedReady =>
-            sdkInitialized &&
-            !loadingRewarded &&
-            !IsFullScreenAdShowing &&
-            rewardedAd != null &&
-            rewardedAd.CanShowAd();
-
+            CanLoadAds() && !loadingRewarded && !IsFullScreenAdShowing &&
+            rewardedAd != null && rewardedAd.CanShowAd() &&
+            Time.realtimeSinceStartup - rewardedLoadedAt < CacheLifetimeSeconds;
         public int RewardedCoinAmount => rewardedCoinAmount;
+        public bool CanShowPrivacyOptions =>
+            ConsentInformation.PrivacyOptionsRequirementStatus ==
+            PrivacyOptionsRequirementStatus.Required;
 
         public event Action RewardedStateChanged;
         public event Action<int> RewardedCoinsGranted;
 
-        private InterstitialAd interstitialAd;
-        private bool sdkInitialized;
-        private bool sdkInitializing;
-        private bool loadingAd;
-        private bool showingAd;
-
-        private int transitionCount;
-        private float lastAdTime = -100000f;
-
-        private Action pendingContinuation;
-
-        public bool CanShowPrivacyOptions =>
-            ConsentInformation.PrivacyOptionsRequirementStatus ==
-            PrivacyOptionsRequirementStatus.Required;
+        private bool CanLoadAds()
+        {
+            return sdkInitialized && !privacyOptionsOpen &&
+                   ConsentInformation.CanRequestAds();
+        }
 
         private void Awake()
         {
@@ -81,542 +100,475 @@ namespace BlockPuzzle.Monetization
                 Destroy(gameObject);
                 return;
             }
-
             Instance = this;
             DontDestroyOnLoad(gameObject);
         }
 
-
         private void Start()
         {
 #if UNITY_ANDROID && !UNITY_EDITOR
-    Debug.Log("[AdMob] Android startup.");
-
-    // Previously obtained consent may already allow requests.
-    if (ConsentInformation.CanRequestAds())
-    {
-        Debug.Log(
-            "[AdMob] Existing consent permits ad requests."
-        );
-
-        TryInitializeAds();
-    }
-
-    // Still refresh consent on every app launch.
-    RequestConsent();
+            Debug.Log("[AdMob] Android startup.");
+            // Prior consent may already be usable, but ALWAYS refresh UMP at launch.
+            if (ConsentInformation.CanRequestAds())
+                TryInitializeAds();
+            RequestConsent();
 #else
-            Debug.Log("[AdMob] Editor mode.");
+            Debug.Log("[AdMob] Editor mode. Real ads require Android.");
 #endif
         }
 
+        private void Update()
+        {
+#if UNITY_ANDROID && !UNITY_EDITOR
+            if (Time.realtimeSinceStartup < nextMaintenanceTime)
+                return;
+            nextMaintenanceTime = Time.realtimeSinceStartup + 1f;
 
+            // A failed UMP update (for example offline on first launch) must
+            // be retried even when CanRequestAds() is currently false.
+            if (!applicationPaused && !privacyOptionsOpen &&
+                !consentRequestInProgress && nextConsentRetryTime > 0f &&
+                Time.realtimeSinceStartup >= nextConsentRetryTime)
+            {
+                nextConsentRetryTime = 0f;
+                RequestConsent();
+            }
+
+            if (applicationPaused || privacyOptionsOpen ||
+                !ConsentInformation.CanRequestAds())
+                return;
+
+            if (!sdkInitialized)
+            {
+                if (!sdkInitializing && Time.realtimeSinceStartup >= nextSdkRetryTime)
+                    TryInitializeAds();
+                return;
+            }
+
+            // Never use a stale preloaded full-screen ad.
+            if (!showingAd && interstitialAd != null &&
+                Time.realtimeSinceStartup - interstitialLoadedAt >= CacheLifetimeSeconds)
+            {
+                Debug.Log("[AdMob] Interstitial cache expired; refreshing.");
+                DestroyInterstitial();
+            }
+            if (!showingRewarded && rewardedAd != null &&
+                Time.realtimeSinceStartup - rewardedLoadedAt >= CacheLifetimeSeconds)
+            {
+                Debug.Log("[AdMob] Rewarded cache expired; refreshing.");
+                DestroyRewarded();
+                RewardedStateChanged?.Invoke();
+            }
+
+            if (!showingAd && !loadingAd && interstitialAd == null &&
+                Time.realtimeSinceStartup >= nextInterstitialRetryTime)
+                LoadInterstitial();
+
+            if (!showingRewarded && !loadingRewarded && rewardedAd == null &&
+                Time.realtimeSinceStartup >= nextRewardedRetryTime)
+                LoadRewarded();
+#endif
+        }
+
+        private void ScheduleConsentRetry()
+        {
+            float delay = RetryDelay(consentFailureCount++);
+            nextConsentRetryTime = Time.realtimeSinceStartup + delay;
+            Debug.LogWarning($"[AdMob] UMP retry in {delay:0}s.");
+        }
 
         private void RequestConsent()
         {
-            Debug.Log("[AdMob] Starting UMP consent update.");
-
-            ConsentRequestParameters parameters =
-                new ConsentRequestParameters();
-
-            ConsentInformation.Update(
-                parameters,
-                error =>
+            if (consentRequestInProgress || privacyOptionsOpen) return;
+            consentRequestInProgress = true;
+            Debug.Log("[AdMob] UMP consent update started.");
+            try
+            {
+                ConsentInformation.Update(new ConsentRequestParameters(), error =>
                 {
                     MobileAdsEventExecutor.ExecuteInUpdate(() =>
                     {
-                        if (this == null)
-                            return;
-
+                        if (this == null) return;
+                        consentRequestInProgress = false;
                         if (error != null)
                         {
-                            Debug.LogWarning(
-                                "[AdMob] UMP update failed: " +
-                                error.Message
-                            );
-
-                            Debug.Log(
-                                "[AdMob] CanRequestAds after error: " +
-                                ConsentInformation.CanRequestAds()
-                            );
-
-                            TryInitializeAds();
+                            Debug.LogWarning("[AdMob] UMP update failed: " + error.Message);
+                            ScheduleConsentRetry();
+                            // UMP may retain an earlier, usable choice.
+                            ReconcileConsent(false);
                             return;
                         }
 
-                        Debug.Log(
-                            "[AdMob] UMP update succeeded."
-                        );
-
-                        Debug.Log(
-                            "[AdMob] CanRequestAds: " +
-                            ConsentInformation.CanRequestAds()
-                        );
-
-                        // Consent might already be sufficient.
-                        TryInitializeAds();
-
-                        ConsentForm.LoadAndShowConsentFormIfRequired(
-                            formError =>
+                        consentFailureCount = 0;
+                        nextConsentRetryTime = 0f;
+                        ReconcileConsent(false);
+                        ConsentForm.LoadAndShowConsentFormIfRequired(formError =>
+                        {
+                            MobileAdsEventExecutor.ExecuteInUpdate(() =>
                             {
-                                MobileAdsEventExecutor.ExecuteInUpdate(() =>
+                                if (this == null) return;
+                                if (formError != null)
                                 {
-                                    if (this == null)
-                                        return;
-
-                                    if (formError != null)
-                                    {
-                                        Debug.LogWarning(
-                                            "[AdMob] UMP form error: " +
-                                            formError.Message
-                                        );
-                                    }
-                                    else
-                                    {
-                                        Debug.Log(
-                                            "[AdMob] UMP form flow completed."
-                                        );
-                                    }
-
-                                    Debug.Log(
-                                        "[AdMob] CanRequestAds after form: " +
-                                        ConsentInformation.CanRequestAds()
-                                    );
-
-                                    TryInitializeAds();
-                                });
+                                    Debug.LogWarning("[AdMob] UMP form: " + formError.Message);
+                                    ScheduleConsentRetry();
+                                }
+                                // Form might have updated personalisation.
+                                ReconcileConsent(formError == null);
                             });
+                        });
                     });
                 });
-        }
-
-
-        private string GetRewardedId()
-        {
-            if (useTestAds)
-                return AndroidTestRewardedId;
-
-            return androidRewardedId == null
-                ? string.Empty
-                : androidRewardedId.Trim();
-        }
-
-        private void LoadRewarded()
-        {
-            if (!sdkInitialized ||
-                loadingRewarded ||
-                showingRewarded ||
-                rewardedAd != null)
+            }
+            catch (Exception ex)
             {
+                consentRequestInProgress = false;
+                Debug.LogError("[AdMob] UMP update exception: " + ex.Message);
+                ScheduleConsentRetry();
+                ReconcileConsent(false);
+            }
+        }
+
+        /// <summary>
+        /// Invalidates cached ads on consent change. In-flight callbacks use
+        /// adGeneration so stale responses cannot populate a new cache.
+        /// </summary>
+        private void ReconcileConsent(bool refreshLoadedAds)
+        {
+            bool permitted = ConsentInformation.CanRequestAds();
+            bool changed = !lastConsentAllowed.HasValue ||
+                           lastConsentAllowed.Value != permitted;
+            lastConsentAllowed = permitted;
+            Debug.Log("[AdMob] Consent permits requests: " + permitted);
+
+            if (changed || refreshLoadedAds)
+            {
+                ConsentRevision++;
+                adGeneration++;
+                loadingAd = false;
+                loadingRewarded = false;
+                nextInterstitialRetryTime = 0f;
+                nextRewardedRetryTime = 0f;
+                interstitialFailureCount = 0;
+                rewardedFailureCount = 0;
+                if (IsFullScreenAdShowing)
+                    clearAdsAfterFullScreen = true;
+                else
+                {
+                    DestroyInterstitial();
+                    DestroyRewarded();
+                }
+                RewardedStateChanged?.Invoke();
+                Debug.Log("[AdMob] Cached ads invalidated. Consent revision " +
+                          ConsentRevision);
+            }
+
+            if (!permitted)
+            {
+                if (!IsFullScreenAdShowing)
+                {
+                    DestroyInterstitial();
+                    DestroyRewarded();
+                    RewardedStateChanged?.Invoke();
+                }
                 return;
             }
 
-            if (!ConsentInformation.CanRequestAds())
-                return;
-
-            string adUnitId = GetRewardedId();
-
-            if (string.IsNullOrWhiteSpace(adUnitId))
+            if (!sdkInitialized) TryInitializeAds();
+            else if (!IsFullScreenAdShowing)
             {
-                Debug.LogWarning(
-                    "[AdMob Rewarded] Ad Unit ID is empty."
-                );
-                return;
+                LoadInterstitial();
+                LoadRewarded();
             }
-
-            loadingRewarded = true;
-            RewardedStateChanged?.Invoke();
-
-            Debug.Log("[AdMob Rewarded] Loading...");
-
-            RewardedAd.Load(
-                adUnitId,
-                new AdRequest(),
-                (ad, error) =>
-                {
-                    MobileAdsEventExecutor.ExecuteInUpdate(() =>
-                    {
-                        loadingRewarded = false;
-
-                        if (this == null)
-                        {
-                            ad?.Destroy();
-                            return;
-                        }
-
-                        if (error != null || ad == null)
-                        {
-                            ad?.Destroy();
-
-                            Debug.LogWarning(
-                                "[AdMob Rewarded] Load failed: " +
-                                error
-                            );
-
-                            RewardedStateChanged?.Invoke();
-                            return;
-                        }
-
-                        rewardedAd = ad;
-
-                        RegisterRewardedEvents(ad);
-
-                        Debug.Log(
-                            "[AdMob Rewarded] Loaded successfully."
-                        );
-
-                        RewardedStateChanged?.Invoke();
-                    });
-                });
         }
-
-        private void RegisterRewardedEvents(RewardedAd ad)
-        {
-            ad.OnAdFullScreenContentOpened += () =>
-            {
-                MobileAdsEventExecutor.ExecuteInUpdate(() =>
-                {
-                    if (this == null)
-                        return;
-
-                    Debug.Log("[AdMob Rewarded] Opened.");
-                });
-            };
-
-            ad.OnAdFullScreenContentClosed += () =>
-            {
-                MobileAdsEventExecutor.ExecuteInUpdate(() =>
-                {
-                    if (this == null)
-                        return;
-
-                    if (rewardedAd != ad)
-                        return;
-
-                    Debug.Log(
-                        "[AdMob Rewarded] Closed. Reward granted: " +
-                        rewardGrantedForCurrentAd
-                    );
-
-                    FinishRewardedAd();
-                });
-            };
-
-            ad.OnAdFullScreenContentFailed += error =>
-            {
-                MobileAdsEventExecutor.ExecuteInUpdate(() =>
-                {
-                    if (this == null)
-                        return;
-
-                    if (rewardedAd != ad)
-                        return;
-
-                    Debug.LogWarning(
-                        "[AdMob Rewarded] Show failed: " + error
-                    );
-
-                    FinishRewardedAd();
-                });
-            };
-        }
-
-
-        public bool ShowRewardedForCoins()
-        {
-#if UNITY_EDITOR
-            Debug.Log(
-                "[AdMob Rewarded] Android device required."
-            );
-            return false;
-#else
-    if (!IsRewardedReady)
-    {
-        Debug.LogWarning(
-            "[AdMob Rewarded] Ad is not ready."
-        );
-        return false;
-    }
-
-    RewardedAd currentAd = rewardedAd;
-
-    showingRewarded = true;
-    rewardGrantedForCurrentAd = false;
-
-    RewardedStateChanged?.Invoke();
-
-    // This variable belongs to this specific ad showing.
-    int rewardProcessed = 0;
-
-    try
-    {
-        currentAd.Show(reward =>
-        {
-            // Deduplicate before dispatching to Unity.
-            if (System.Threading.Interlocked.Exchange(
-                    ref rewardProcessed, 1) != 0)
-            {
-                return;
-            }
-
-            MobileAdsEventExecutor.ExecuteInUpdate(() =>
-            {
-                if (this == null)
-                    return;
-
-                rewardGrantedForCurrentAd = true;
-
-                int coins = rewardedCoinAmount;
-
-                AdventureSaveService.AddRewardedCoins(
-                    coins
-                );
-
-                Debug.Log(
-                    "[AdMob Rewarded] Reward granted: +" +
-                    coins
-                );
-
-                RewardedCoinsGranted?.Invoke(coins);
-            });
-        });
-
-        return true;
-    }
-    catch (Exception exception)
-    {
-        Debug.LogError(
-            "[AdMob Rewarded] Show failed: " +
-            exception.Message
-        );
-
-        FinishRewardedAd();
-        return false;
-    }
-#endif
-        }
-
 
         private void TryInitializeAds()
         {
-            if (sdkInitialized || sdkInitializing)
+            if (sdkInitialized || sdkInitializing || privacyOptionsOpen ||
+                Time.realtimeSinceStartup < nextSdkRetryTime ||
+                !ConsentInformation.CanRequestAds())
                 return;
-
-            bool canRequest =
-                ConsentInformation.CanRequestAds();
-
-            Debug.Log(
-                "[AdMob] TryInitializeAds. CanRequestAds: " +
-                canRequest
-            );
-
-            if (!canRequest)
-            {
-                Debug.LogWarning(
-                    "[AdMob] Initialization deferred: consent not ready."
-                );
-                return;
-            }
 
             sdkInitializing = true;
-
-            Debug.Log("[AdMob] Calling MobileAds.Initialize.");
-
             MobileAds.Initialize(status =>
             {
-                Debug.Log(
-                    "[AdMob] MobileAds.Initialize callback received."
-                );
-
                 MobileAdsEventExecutor.ExecuteInUpdate(() =>
                 {
-                    if (this == null)
-                        return;
-
+                    if (this == null) return;
                     sdkInitializing = false;
-
                     if (status == null)
                     {
-                        sdkInitialized = false;
-
-                        Debug.LogError(
-                            "[AdMob] SDK returned null initialization status."
-                        );
-
+                        float delay = RetryDelay(sdkFailureCount++);
+                        nextSdkRetryTime = Time.realtimeSinceStartup + delay;
+                        Debug.LogError("[AdMob] SDK initialization returned null; " +
+                                       $"retry in {delay:0}s.");
                         return;
                     }
-
                     sdkInitialized = true;
-
+                    sdkFailureCount = 0;
+                    nextSdkRetryTime = 0f;
                     Debug.Log("[AdMob] SDK Initialized: True");
-
                     LoadInterstitial();
                     LoadRewarded();
                 });
             });
         }
 
-
-        private void FinishRewardedAd()
+        private static float RetryDelay(int failures)
         {
-            showingRewarded = false;
-
-            if (rewardedAd != null)
-            {
-                rewardedAd.Destroy();
-                rewardedAd = null;
-            }
-
-            RewardedStateChanged?.Invoke();
-
-            if (sdkInitialized &&
-                ConsentInformation.CanRequestAds())
-            {
-                LoadRewarded();
-            }
+            return Mathf.Min(RetryMaximumSeconds,
+                RetryFirstSeconds * Mathf.Pow(2f, Mathf.Min(3, failures)));
         }
 
-        private string GetInterstitialId()
+        private void ScheduleInterstitialRetry()
         {
-            if (useTestAds)
-                return AndroidTestInterstitialId;
-
-            return androidInterstitialId.Trim();
+            float delay = RetryDelay(interstitialFailureCount++);
+            nextInterstitialRetryTime = Time.realtimeSinceStartup + delay;
+            Debug.LogWarning($"[AdMob] Interstitial retry in {delay:0}s.");
         }
+
+        private void ScheduleRewardedRetry()
+        {
+            float delay = RetryDelay(rewardedFailureCount++);
+            nextRewardedRetryTime = Time.realtimeSinceStartup + delay;
+            Debug.LogWarning($"[AdMob Rewarded] Retry in {delay:0}s.");
+        }
+
+        private string GetInterstitialId() => useTestAds
+            ? AndroidTestInterstitialId : (androidInterstitialId ?? "").Trim();
+
+        private string GetRewardedId() => useTestAds
+            ? AndroidTestRewardedId : (androidRewardedId ?? "").Trim();
 
         private void LoadInterstitial()
         {
-            if (!sdkInitialized || loadingAd ||
-                showingAd || interstitialAd != null)
+            if (!CanLoadAds() || loadingAd || showingAd ||
+                interstitialAd != null ||
+                Time.realtimeSinceStartup < nextInterstitialRetryTime)
                 return;
 
-            string adUnitId = GetInterstitialId();
-
-            if (string.IsNullOrWhiteSpace(adUnitId))
-            {
-                Debug.LogWarning(
-                    "[AdMob] Interstitial ID is empty."
-                );
-                return;
-            }
+            string unitId = GetInterstitialId();
+            if (string.IsNullOrEmpty(unitId)) return;
 
             loadingAd = true;
-
-            InterstitialAd.Load(
-                adUnitId,
-                new AdRequest(),
-                (ad, error) =>
+            int requestGeneration = adGeneration;
+            try
+            {
+                InterstitialAd.Load(unitId, new AdRequest(), (ad, error) =>
                 {
                     MobileAdsEventExecutor.ExecuteInUpdate(() =>
                     {
-                        loadingAd = false;
-
-                        if (this == null)
+                        if (this == null || requestGeneration != adGeneration)
                         {
                             ad?.Destroy();
                             return;
                         }
-
-                        if (error != null || ad == null)
+                        loadingAd = false;
+                        if (!CanLoadAds() || error != null || ad == null)
                         {
                             ad?.Destroy();
-
-                            Debug.LogWarning(
-                                "[AdMob] Interstitial load failed: " +
-                                (error == null ? "Unknown" : error.ToString())
-                            );
-
-                            // Do not retry continuously on errors.
+                            if (CanLoadAds()) ScheduleInterstitialRetry();
+                            Debug.LogWarning("[AdMob] Interstitial load failed: " + error);
                             return;
                         }
 
                         interstitialAd = ad;
-
+                        interstitialLoadedAt = Time.realtimeSinceStartup;
+                        interstitialFailureCount = 0;
+                        nextInterstitialRetryTime = 0f;
                         RegisterInterstitialEvents(ad);
-
-                        Debug.Log(
-                            "[AdMob] Interstitial loaded."
-                        );
+                        Debug.Log("[AdMob] Interstitial loaded.");
                     });
                 });
+            }
+            catch (Exception ex)
+            {
+                loadingAd = false;
+                Debug.LogError("[AdMob] Interstitial request exception: " + ex.Message);
+                ScheduleInterstitialRetry();
+            }
         }
 
-        private void RegisterInterstitialEvents(
-            InterstitialAd ad)
+        private void RegisterInterstitialEvents(InterstitialAd ad)
         {
             ad.OnAdFullScreenContentClosed += () =>
-            {
-                MobileAdsEventExecutor.ExecuteInUpdate(() =>
-                {
-                    FinishAdAndContinue();
-                });
-            };
-
+                MobileAdsEventExecutor.ExecuteInUpdate(() => FinishAdAndContinue());
             ad.OnAdFullScreenContentFailed += error =>
-            {
                 MobileAdsEventExecutor.ExecuteInUpdate(() =>
                 {
-                    Debug.LogWarning(
-                        "[AdMob] Ad display failed: " + error
-                    );
-
+                    Debug.LogWarning("[AdMob] Interstitial display failed: " + error);
                     FinishAdAndContinue();
                 });
-            };
         }
 
+        private void LoadRewarded()
+        {
+            if (!CanLoadAds() || loadingRewarded || showingRewarded ||
+                rewardedAd != null ||
+                Time.realtimeSinceStartup < nextRewardedRetryTime)
+                return;
+
+            string unitId = GetRewardedId();
+            if (string.IsNullOrEmpty(unitId)) return;
+
+            loadingRewarded = true;
+            RewardedStateChanged?.Invoke();
+            int requestGeneration = adGeneration;
+            try
+            {
+                RewardedAd.Load(unitId, new AdRequest(), (ad, error) =>
+                {
+                    MobileAdsEventExecutor.ExecuteInUpdate(() =>
+                    {
+                        if (this == null || requestGeneration != adGeneration)
+                        {
+                            ad?.Destroy();
+                            return;
+                        }
+                        loadingRewarded = false;
+                        if (!CanLoadAds() || error != null || ad == null)
+                        {
+                            ad?.Destroy();
+                            if (CanLoadAds()) ScheduleRewardedRetry();
+                            Debug.LogWarning("[AdMob Rewarded] Load failed: " + error);
+                            RewardedStateChanged?.Invoke();
+                            return;
+                        }
+
+                        rewardedAd = ad;
+                        rewardedLoadedAt = Time.realtimeSinceStartup;
+                        rewardedFailureCount = 0;
+                        nextRewardedRetryTime = 0f;
+                        RegisterRewardedEvents(ad);
+                        Debug.Log("[AdMob Rewarded] Loaded successfully.");
+                        RewardedStateChanged?.Invoke();
+                    });
+                });
+            }
+            catch (Exception ex)
+            {
+                loadingRewarded = false;
+                Debug.LogError("[AdMob Rewarded] Request exception: " + ex.Message);
+                ScheduleRewardedRetry();
+                RewardedStateChanged?.Invoke();
+            }
+        }
+
+        private void RegisterRewardedEvents(RewardedAd ad)
+        {
+            ad.OnAdFullScreenContentOpened += () =>
+                MobileAdsEventExecutor.ExecuteInUpdate(() =>
+                    Debug.Log("[AdMob Rewarded] Opened."));
+
+            ad.OnAdFullScreenContentClosed += () =>
+                MobileAdsEventExecutor.ExecuteInUpdate(() =>
+                {
+                    if (this != null && rewardedAd == ad)
+                        FinishRewardedAd();
+                });
+            ad.OnAdFullScreenContentFailed += error =>
+                MobileAdsEventExecutor.ExecuteInUpdate(() =>
+                {
+                    if (this != null && rewardedAd == ad)
+                    {
+                        Debug.LogWarning("[AdMob Rewarded] Show failed: " + error);
+                        FinishRewardedAd();
+                    }
+                });
+        }
+
+        public bool ShowRewardedForCoins()
+        {
+#if UNITY_EDITOR
+            Debug.Log("[AdMob Rewarded] Android device required.");
+            return false;
+#else
+            if (!IsRewardedReady) return false;
+            RewardedAd currentAd = rewardedAd;
+            showingRewarded = true;
+            rewardGrantedForCurrentAd = false;
+            RewardedStateChanged?.Invoke();
+            int rewardProcessed = 0;
+            try
+            {
+                currentAd.Show(reward =>
+                {
+                    // The SDK callback may run off the Unity thread.
+                    if (System.Threading.Interlocked.Exchange(ref rewardProcessed, 1) != 0)
+                        return;
+                    MobileAdsEventExecutor.ExecuteInUpdate(() =>
+                    {
+                        if (this == null) return;
+                        rewardGrantedForCurrentAd = true;
+                        AdventureSaveService.AddRewardedCoins(rewardedCoinAmount);
+                        Debug.Log("[AdMob Rewarded] Reward granted: +" + rewardedCoinAmount);
+                        RewardedCoinsGranted?.Invoke(rewardedCoinAmount);
+                    });
+                });
+                return true;
+            }
+            catch (Exception ex)
+            {
+                Debug.LogError("[AdMob Rewarded] Show exception: " + ex.Message);
+                FinishRewardedAd();
+                return false;
+            }
+#endif
+        }
+
+        private void FinishRewardedAd()
+        {
+            if (!showingRewarded) return;
+            showingRewarded = false;
+            Debug.Log("[AdMob Rewarded] Closed; reward granted=" +
+                      rewardGrantedForCurrentAd);
+            DestroyRewarded();
+            if (clearAdsAfterFullScreen)
+            {
+                clearAdsAfterFullScreen = false;
+                DestroyInterstitial();
+            }
+            RewardedStateChanged?.Invoke();
+            if (CanLoadAds()) LoadRewarded();
+
+            // A transition clicked during a rewarded ad must not be lost.
+            // Never show an interstitial immediately after a rewarded ad.
+            Action continuation = deferredRewardedContinuation;
+            deferredRewardedContinuation = null;
+            InvokeContinuation(continuation);
+        }
 
         public void RunAtTransition(Action continuation)
         {
-            if (continuation == null)
-                return;
+            if (continuation == null) return;
 
-            if (IsFullScreenAdShowing)
+            if (showingRewarded)
             {
-                Debug.LogWarning(
-                    "[AdMob DEBUG] An ad is already showing."
-                );
+                if (deferredRewardedContinuation == null)
+                {
+                    deferredRewardedContinuation = continuation;
+                    Debug.Log("[AdMob] Transition deferred until rewarded closes.");
+                }
+                else Debug.LogWarning("[AdMob] Duplicate transition ignored.");
+                return;
+            }
+            if (showingAd)
+            {
+                // The first continuation is already guaranteed at ad close.
+                Debug.LogWarning("[AdMob] Duplicate transition ignored while interstitial is open.");
                 return;
             }
 
             transitionCount++;
+            bool frequencyReached = transitionCount >= transitionsPerAd;
+            bool cooldownReached = Time.realtimeSinceStartup - lastAdTime >=
+                                   minimumSecondsBetweenAds;
+            bool adReady = CanLoadAds() && interstitialAd != null &&
+                           interstitialAd.CanShowAd() &&
+                           Time.realtimeSinceStartup - interstitialLoadedAt < CacheLifetimeSeconds;
 
-            bool frequencyReached =
-                transitionCount >= transitionsPerAd;
-
-            float elapsed =
-                Time.realtimeSinceStartup - lastAdTime;
-
-            bool cooldownFinished =
-                elapsed >= minimumSecondsBetweenAds;
-
-            bool adReady =
-     !showingRewarded &&
-     interstitialAd != null &&
-     interstitialAd.CanShowAd();
-
-            Debug.Log(
-                "[AdMob DEBUG] Transition requested\n" +
-                $"SDK Initialized: {sdkInitialized}\n" +
-                $"Consent CanRequestAds: " +
-                $"{ConsentInformation.CanRequestAds()}\n" +
-                $"Loading Ad: {loadingAd}\n" +
-                $"Ad Ready: {adReady}\n" +
-                $"Transition Count: {transitionCount}\n" +
-                $"Required Count: {transitionsPerAd}\n" +
-                $"Frequency Reached: {frequencyReached}\n" +
-                $"Cooldown Finished: {cooldownFinished}"
-            );
-
-            if (!sdkInitialized ||
-                !frequencyReached ||
-                !cooldownFinished ||
-                !adReady)
+            if (!frequencyReached || !cooldownReached || !adReady)
             {
-                Debug.Log(
-                    "[AdMob DEBUG] Skipping ad, continuing game."
-                );
-
-                continuation();
+                InvokeContinuation(continuation);
                 return;
             }
 
@@ -624,93 +576,99 @@ namespace BlockPuzzle.Monetization
             lastAdTime = Time.realtimeSinceStartup;
             showingAd = true;
             pendingContinuation = continuation;
-
-            Debug.Log("[AdMob DEBUG] Showing interstitial.");
-
+            Debug.Log("[AdMob] Showing interstitial.");
             try
             {
                 interstitialAd.Show();
             }
-            catch (Exception exception)
+            catch (Exception ex)
             {
-                Debug.LogError(
-                    "[AdMob DEBUG] Show failed: " +
-                    exception.Message
-                );
-
+                Debug.LogError("[AdMob] Interstitial show exception: " + ex.Message);
                 FinishAdAndContinue();
             }
         }
 
-
         private void FinishAdAndContinue()
         {
-            if (!showingAd)
-                return;
-
+            if (!showingAd) return;
             showingAd = false;
-
             DestroyInterstitial();
-
+            if (clearAdsAfterFullScreen)
+            {
+                clearAdsAfterFullScreen = false;
+                DestroyRewarded();
+            }
             Action continuation = pendingContinuation;
             pendingContinuation = null;
+            if (CanLoadAds()) LoadInterstitial();
+            InvokeContinuation(continuation);
+        }
 
-            // Reload for a future opportunity, not the current one.
-            LoadInterstitial();
-
-            continuation?.Invoke();
+        private static void InvokeContinuation(Action continuation)
+        {
+            if (continuation == null) return;
+            try { continuation(); }
+            catch (Exception ex)
+            {
+                Debug.LogError("[AdMob] Transition callback threw: " + ex);
+            }
         }
 
         private void DestroyInterstitial()
         {
-            if (interstitialAd == null)
-                return;
-
+            if (interstitialAd == null) return;
             interstitialAd.Destroy();
             interstitialAd = null;
         }
 
+        private void DestroyRewarded()
+        {
+            if (rewardedAd == null) return;
+            rewardedAd.Destroy();
+            rewardedAd = null;
+        }
+
         public void ShowPrivacyOptions()
         {
-            if (!CanShowPrivacyOptions)
-                return;
-
-            ConsentForm.ShowPrivacyOptionsForm(error =>
+            if (!CanShowPrivacyOptions || privacyOptionsOpen) return;
+            privacyOptionsOpen = true;
+            try
             {
-                MobileAdsEventExecutor.ExecuteInUpdate(() =>
+                ConsentForm.ShowPrivacyOptionsForm(error =>
                 {
-                    if (this == null)
-                        return;
-
-                    if (error != null)
+                    MobileAdsEventExecutor.ExecuteInUpdate(() =>
                     {
-                        Debug.LogWarning(
-                            "[AdMob] Privacy options: " +
-                            error.Message
-                        );
-                    }
-
-                    if (ConsentInformation.CanRequestAds())
-                        TryInitializeAds();
-                    else
-                        DestroyInterstitial();
+                        if (this == null) return;
+                        privacyOptionsOpen = false;
+                        if (error != null)
+                            Debug.LogWarning("[AdMob] Privacy options: " + error.Message);
+                        ReconcileConsent(error == null);
+                    });
                 });
-            });
+            }
+            catch (Exception ex)
+            {
+                privacyOptionsOpen = false;
+                Debug.LogError("[AdMob] Privacy form exception: " + ex.Message);
+                ReconcileConsent(false);
+            }
+        }
+
+        private void OnApplicationPause(bool paused)
+        {
+            applicationPaused = paused;
+            if (!paused) nextMaintenanceTime = 0f;
         }
 
         private void OnDestroy()
         {
-            if (Instance == this)
-                Instance = null;
-
+            if (Instance != this) return;
+            Instance = null;
+            adGeneration++;
             DestroyInterstitial();
+            DestroyRewarded();
             pendingContinuation = null;
-
-            if (rewardedAd != null)
-            {
-                rewardedAd.Destroy();
-                rewardedAd = null;
-            }
+            deferredRewardedContinuation = null;
         }
     }
 }

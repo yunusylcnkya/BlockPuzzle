@@ -9,17 +9,18 @@ using UnityEngine.SceneManagement;
 namespace BlockPuzzle.Monetization
 {
     /// <summary>
-    /// One native anchored adaptive banner, shared by MainMenu and AdventureMap.
-    /// Attach to the existing, persistent AdMobManager object in Boot.
-    /// AdMobManager owns consent, SDK initialization and test-ad configuration.
+    /// One anchored adaptive banner shared between MainMenu and AdventureMap.
+    /// A failed request is retried on the SAME BannerView with backoff.
     /// </summary>
     [DisallowMultipleComponent]
     [RequireComponent(typeof(AdMobManager))]
     public sealed class AdMobAdaptiveBanner : MonoBehaviour
     {
-        // Official Google Android ANCHORED ADAPTIVE banner test unit.
         private const string AndroidTestBannerId =
             "ca-app-pub-3940256099942544/9214589741";
+        private const float CheckIntervalSeconds = 0.5f;
+        private const float FirstRetrySeconds = 15f;
+        private const float MaxRetrySeconds = 120f;
 
         [Header("Banner Settings")]
         [SerializeField] private bool enableBanner = true;
@@ -29,13 +30,15 @@ namespace BlockPuzzle.Monetization
         [SerializeField] private bool showOnMainMenu = true;
         [SerializeField] private bool showOnAdventureMap = true;
 
-        private const float VisibilityCheckInterval = 0.5f;
-
         private AdMobManager adMob;
         private BannerView bannerView;
         private bool bannerLoaded;
         private bool bannerVisible;
+        private bool requestInFlight;
         private bool applicationPaused;
+        private int lastConsentRevision = -1;
+        private int failureCount;
+        private float nextRetryTime;
         private float nextVisibilityCheck;
 
         private void Awake()
@@ -55,80 +58,80 @@ namespace BlockPuzzle.Monetization
 
         private void Update()
         {
-            if (Time.unscaledTime < nextVisibilityCheck)
-                return;
-
-            nextVisibilityCheck =
-                Time.unscaledTime + VisibilityCheckInterval;
-
+            if (Time.realtimeSinceStartup < nextVisibilityCheck) return;
+            nextVisibilityCheck = Time.realtimeSinceStartup + CheckIntervalSeconds;
             RefreshBannerState();
         }
 
         private void HandleSceneLoaded(Scene scene, LoadSceneMode mode)
         {
-            // A native banner is not part of Unity's Canvas. Hide it as soon
-            // as the new scene is ready so it never covers gameplay controls.
             RefreshBannerState();
         }
 
         private bool IsAllowedScene()
         {
             string sceneName = SceneManager.GetActiveScene().name;
-
             return (showOnMainMenu && sceneName == "MainMenu") ||
                    (showOnAdventureMap && sceneName == "AdventureMap");
         }
 
         private string GetBannerUnitId()
         {
-            if (adMob != null && adMob.UseTestAds)
-                return AndroidTestBannerId;
-
-            return string.IsNullOrWhiteSpace(androidBannerId)
-                ? string.Empty
-                : androidBannerId.Trim();
+            if (adMob != null && adMob.UseTestAds) return AndroidTestBannerId;
+            return (androidBannerId ?? "").Trim();
         }
 
         private void RefreshBannerState()
         {
 #if UNITY_ANDROID && !UNITY_EDITOR
-            if (adMob == null)
-                adMob = AdMobManager.Instance;
+            if (adMob == null) adMob = AdMobManager.Instance;
+            if (adMob == null) return;
 
-            if (!enableBanner || !IsAllowedScene() || applicationPaused)
+            if (lastConsentRevision != adMob.ConsentRevision)
             {
-                HideBanner();
-                return;
+                lastConsentRevision = adMob.ConsentRevision;
+                DestroyBanner();
+                failureCount = 0;
+                nextRetryTime = 0f;
+                Debug.Log("[Banner] Consent revision: " + lastConsentRevision);
             }
 
-            // Do not request ads until the existing UMP / MobileAds
-            // initialization pipeline has completed successfully.
-            bool canRequestAds = ConsentInformation.CanRequestAds();
-            if (!canRequestAds)
+            if (!ConsentInformation.CanRequestAds())
             {
                 DestroyBanner();
                 return;
             }
 
-            if (adMob == null || !adMob.IsSdkInitialized)
+            if (!enableBanner || !IsAllowedScene() || applicationPaused ||
+                adMob.IsPrivacyOptionsOpen || adMob.IsFullScreenAdShowing)
             {
                 HideBanner();
                 return;
             }
 
-            if (adMob.IsFullScreenAdShowing)
+            if (!adMob.IsSdkInitialized)
             {
                 HideBanner();
                 return;
             }
 
             if (bannerView == null)
-                CreateBanner();
+            {
+                if (Time.realtimeSinceStartup >= nextRetryTime)
+                    CreateBanner();
+                return;
+            }
 
             if (bannerLoaded)
+            {
                 ShowBanner();
-#else
-            // No native ads in Unity Editor or non-Android builds.
+            }
+            else if (!requestInFlight && Time.realtimeSinceStartup >= nextRetryTime)
+            {
+                // Google recommends requesting another ad on an existing
+                // banner view rather than recreate/destroy on each load error.
+                RequestBannerAd(bannerView);
+            }
 #endif
         }
 
@@ -138,37 +141,33 @@ namespace BlockPuzzle.Monetization
             string unitId = GetBannerUnitId();
             if (string.IsNullOrEmpty(unitId))
             {
-                // Production builds must be given their own banner ad unit.
-                Debug.LogWarning("[Banner] Android banner Ad Unit ID is empty.");
+                Debug.LogWarning("[Banner] Android banner unit ID is missing.");
+                nextRetryTime = Time.realtimeSinceStartup + MaxRetrySeconds;
                 return;
             }
 
-            int safeWidthDp = MobileAds.Utils.GetDeviceSafeWidth();
-            if (safeWidthDp <= 0)
-                return; // Retry on a subsequent update when metrics are ready.
+            int widthDp = MobileAds.Utils.GetDeviceSafeWidth();
+            if (widthDp <= 0) return;
 
             try
             {
-                AdSize adaptiveSize =
-                    AdSize.GetCurrentOrientationAnchoredAdaptiveBannerAdSizeWithWidth(
-                        safeWidthDp);
-
-                BannerView view = new BannerView(
-                    unitId, adaptiveSize, AdPosition.Bottom);
-
+                AdSize size = AdSize.GetCurrentOrientationAnchoredAdaptiveBannerAdSizeWithWidth(widthDp);
+                BannerView view = new BannerView(unitId, size, AdPosition.Bottom);
                 bannerView = view;
                 bannerLoaded = false;
                 bannerVisible = false;
+                requestInFlight = false;
                 view.Hide();
 
                 view.OnBannerAdLoaded += () =>
                 {
                     MobileAdsEventExecutor.ExecuteInUpdate(() =>
                     {
-                        if (this == null || bannerView != view)
-                            return;
-
+                        if (this == null || bannerView != view) return;
+                        requestInFlight = false;
                         bannerLoaded = true;
+                        failureCount = 0;
+                        nextRetryTime = 0f;
                         Debug.Log("[Banner] Anchored adaptive banner loaded.");
                         RefreshBannerState();
                     });
@@ -178,36 +177,59 @@ namespace BlockPuzzle.Monetization
                 {
                     MobileAdsEventExecutor.ExecuteInUpdate(() =>
                     {
-                        if (this == null || bannerView != view)
-                            return;
-
+                        if (this == null || bannerView != view) return;
+                        requestInFlight = false;
                         bannerLoaded = false;
-                        bannerVisible = false;
+                        HideBanner();
+                        ScheduleRetry();
                         Debug.LogWarning("[Banner] Load failed: " + error);
-                        // Avoid tight request/retry loops. SDK ad refresh
-                        // settings or a later app launch can retry.
                     });
                 };
 
-                Debug.Log(
-                    "[Banner] Loading anchored adaptive test=" +
-                    adMob.UseTestAds + " width=" + safeWidthDp + "dp.");
-
-                view.LoadAd(new AdRequest());
+                Debug.Log("[Banner] Created anchored adaptive; width=" + widthDp + "dp.");
+                RequestBannerAd(view);
             }
             catch (Exception ex)
             {
-                Debug.LogError("[Banner] Could not create banner: " + ex.Message);
+                Debug.LogError("[Banner] Create failed: " + ex.Message);
                 DestroyBanner();
+                ScheduleRetry();
             }
 #endif
         }
 
+        private void RequestBannerAd(BannerView view)
+        {
+#if UNITY_ANDROID && !UNITY_EDITOR
+            if (view == null || view != bannerView || requestInFlight ||
+                !ConsentInformation.CanRequestAds()) return;
+            requestInFlight = true;
+            Debug.Log("[Banner] Requesting anchored adaptive banner.");
+            try
+            {
+                view.LoadAd(new AdRequest());
+            }
+            catch (Exception ex)
+            {
+                requestInFlight = false;
+                Debug.LogError("[Banner] Load exception: " + ex.Message);
+                ScheduleRetry();
+            }
+#endif
+        }
+
+        private void ScheduleRetry()
+        {
+            float seconds = Mathf.Min(MaxRetrySeconds,
+                FirstRetrySeconds * Mathf.Pow(2f, Mathf.Min(3, failureCount)));
+            failureCount++;
+            nextRetryTime = Time.realtimeSinceStartup + seconds;
+            Debug.LogWarning($"[Banner] Retry in {seconds:0}s.");
+        }
+
         private void ShowBanner()
         {
-            if (bannerView == null || !bannerLoaded || bannerVisible)
-                return;
-
+            if (bannerView == null || !bannerLoaded || bannerVisible) return;
             bannerView.Show();
             bannerVisible = true;
             Debug.Log("[Banner] Visible: " + SceneManager.GetActiveScene().name);
@@ -215,9 +237,7 @@ namespace BlockPuzzle.Monetization
 
         private void HideBanner()
         {
-            if (bannerView == null || !bannerVisible)
-                return;
-
+            if (bannerView == null || !bannerVisible) return;
             bannerView.Hide();
             bannerVisible = false;
             Debug.Log("[Banner] Hidden: " + SceneManager.GetActiveScene().name);
@@ -231,18 +251,16 @@ namespace BlockPuzzle.Monetization
                 bannerView = null;
                 Debug.Log("[Banner] Destroyed.");
             }
-
             bannerLoaded = false;
             bannerVisible = false;
+            requestInFlight = false;
         }
 
         private void OnApplicationPause(bool paused)
         {
             applicationPaused = paused;
-            if (paused)
-                HideBanner();
-            else
-                nextVisibilityCheck = 0f;
+            if (paused) HideBanner();
+            else nextVisibilityCheck = 0f;
         }
 
         private void OnDisable()
