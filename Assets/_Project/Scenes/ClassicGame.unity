@@ -2982,6 +2982,8 @@ MonoBehaviour:
   - {fileID: 833143387}
   dragLayer: {fileID: 245818838}
   gridManager: {fileID: 159645396}
+  spawnProfile: 1
+  adventureCatalog: {fileID: 0}
 --- !u!1 &924371072
 GameObject:
   m_ObjectHideFlags: 0

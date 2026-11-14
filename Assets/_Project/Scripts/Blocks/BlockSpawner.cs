@@ -2,6 +2,8 @@ using System;
 using System.Collections.Generic;
 using UnityEngine;
 using BlockPuzzle.Grid;
+using BlockPuzzle.Adventure;
+using BlockPuzzle.Selection;
 
 namespace BlockPuzzle.Blocks
 {
@@ -16,6 +18,13 @@ namespace BlockPuzzle.Blocks
         [SerializeField] private RectTransform dragLayer;
         [SerializeField] private GridManager gridManager;
 
+        [Header("Smart Selection - v2.0.0-dev.2")]
+        [Tooltip("Legacy preserves the original random spawning behavior.")]
+        [SerializeField] private SmartSpawnProfile spawnProfile = SmartSpawnProfile.Legacy;
+        [Tooltip("Set the same AdventureLevelCatalog as AdventureGameController.")]
+        [SerializeField] private AdventureLevelCatalog adventureCatalog;
+
+        private System.Random smartRandom;
         private readonly List<BlockView> activeBlocks = new();
         public IReadOnlyList<BlockView> ActiveBlocks => activeBlocks;
         public event Action TrayChanged;
@@ -57,12 +66,15 @@ namespace BlockPuzzle.Blocks
                 return;
             }
 
+            // Only normal three-block spawning uses smart selection.
+            // Reroll and Undo are deliberately left unchanged.
+            IReadOnlyList<BlockDefinition> selectedBlocks = SelectSpawnDefinitions(validBlocks);
+
             ClearActiveBlocks();
 
             for (int i = 0; i < 3; i++)
             {
-                BlockDefinition selected = validBlocks[
-                    UnityEngine.Random.Range(0, validBlocks.Count)];
+                BlockDefinition selected = selectedBlocks[i];
                 BlockView block = Instantiate(blockViewPrefab, slots[i]);
                 RectTransform rect = block.GetComponent<RectTransform>();
                 rect.anchorMin = Vector2.one * 0.5f;
@@ -81,8 +93,78 @@ namespace BlockPuzzle.Blocks
                 activeBlocks.Add(block);
             }
 
-            Debug.Log("[BlockSpawner] Three blocks spawned.");
+            Debug.Log("[BlockSpawner] Three blocks spawned. Profile=" + spawnProfile);
             TrayChanged?.Invoke();
+        }
+
+        private IReadOnlyList<BlockDefinition> SelectSpawnDefinitions(
+            List<BlockDefinition> validBlocks)
+        {
+            // Exact v1.x behavior: independently sample three shapes with
+            // replacement through UnityEngine.Random.
+            if (spawnProfile == SmartSpawnProfile.Legacy)
+            {
+                var legacy = new List<BlockDefinition>(3);
+                for (int i = 0; i < 3; i++)
+                    legacy.Add(validBlocks[UnityEngine.Random.Range(0, validBlocks.Count)]);
+                return legacy;
+            }
+
+            if (smartRandom == null)
+                smartRandom = new System.Random(UnityEngine.Random.Range(1, int.MaxValue));
+
+            SmartDifficulty difficulty = SmartDifficulty.Medium;
+            bool guaranteePlaceable = false;
+
+            if (spawnProfile == SmartSpawnProfile.AdventureAdaptive)
+            {
+                // The selected level id exists before AdventureGame.Start().
+                // Avoid a Start() execution-order dependency.
+                AdventureLevelDefinition currentLevel = adventureCatalog == null
+                    ? null
+                    : adventureCatalog.GetLevel(AdventureSession.SelectedLevelId);
+
+                if (currentLevel == null)
+                {
+                    Debug.LogWarning("[BlockSpawner] Adventure catalog / level " +
+                        "not assigned. Using Medium without assistance.");
+                }
+                else
+                {
+                    switch (currentLevel.Difficulty)
+                    {
+                        case AdventureDifficulty.Easy:
+                            difficulty = SmartDifficulty.Easy;
+                            guaranteePlaceable = true;
+                            break;
+                        case AdventureDifficulty.Medium:
+                            difficulty = SmartDifficulty.Medium;
+                            guaranteePlaceable = true;
+                            break;
+                        case AdventureDifficulty.Hard:
+                            difficulty = SmartDifficulty.Hard;
+                            break;
+                        case AdventureDifficulty.Expert:
+                            difficulty = SmartDifficulty.Expert;
+                            break;
+                    }
+                }
+            }
+
+            // GridManager.Start may run AFTER BlockSpawner.Start. On the first
+            // tray, an uninitialized board simply disables the assistance.
+            bool gridReady = gridManager.GetCell(0, 0) != null;
+            Func<BlockDefinition, bool> fits = definition =>
+                gridReady && gridManager.HasAnyValidPlacement(definition);
+
+            return SmartBlockSelector.Select(
+                validBlocks,
+                3,
+                smartRandom,
+                definition => definition.Cells.Count,
+                fits,
+                difficulty,
+                guaranteePlaceable && gridReady);
         }
 
         public void NotifyBlockUsed(BlockView block)
