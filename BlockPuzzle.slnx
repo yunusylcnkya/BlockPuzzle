@@ -1,6 +1,8 @@
 ﻿<Solution>
   <Project Path="Assembly-CSharp.csproj" />
   <Project Path="Assembly-CSharp-Editor.csproj" />
+  <Project Path="BlockPuzzle.ClassicPersistence.csproj" />
+  <Project Path="BlockPuzzle.ClassicPersistence.EditModeTests.csproj" />
   <Project Path="BlockPuzzle.Selection.csproj" />
   <Project Path="BlockPuzzle.Selection.EditModeTests.csproj" />
 </Solution>

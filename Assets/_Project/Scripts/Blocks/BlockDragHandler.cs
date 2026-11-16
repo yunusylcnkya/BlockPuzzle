@@ -21,10 +21,16 @@ namespace BlockPuzzle.Blocks
 
         private static int nextBlockId = 1;
 
-        // Optional hooks. No Undo listener exists in ClassicGame, so Classic
-        // keeps its previous behavior without any new Inspector references.
+        // Preserve existing Adventure Undo callbacks.
         public static event Action<BlockDragHandler> BeforeValidPlacement;
         public static event Action<bool> AfterPlacement;
+
+        // v2.0.0-dev.3: prevent BlockId collisions after restoring a Classic run.
+        public static void EnsureNextBlockIdAtLeast(int minimum)
+        {
+            if (minimum > nextBlockId)
+                nextBlockId = minimum;
+        }
 
         public Transform SourceTraySlot => originalParent != null
             ? originalParent : transform.parent;

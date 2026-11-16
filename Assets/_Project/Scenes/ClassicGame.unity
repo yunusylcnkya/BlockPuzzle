@@ -3131,6 +3131,7 @@ GameObject:
   m_Component:
   - component: {fileID: 957958125}
   - component: {fileID: 957958126}
+  - component: {fileID: 957958127}
   m_Layer: 0
   m_Name: ClassicGameController
   m_TagString: Untagged
@@ -3172,6 +3173,22 @@ MonoBehaviour:
   finalScoreText: {fileID: 886136727}
   bestScoreText: {fileID: 213578234}
   feedbackController: {fileID: 1228505356}
+--- !u!114 &957958127
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 957958124}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: af7b9dfa435f76f40bb16784cca5dfd9, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::BlockPuzzle.Classic.ClassicRunController
+  gridManager: {fileID: 159645396}
+  gridRoot: {fileID: 384949951}
+  blockSpawner: {fileID: 897909021}
+  scoreManager: {fileID: 323048147}
 --- !u!1 &1003251322
 GameObject:
   m_ObjectHideFlags: 0

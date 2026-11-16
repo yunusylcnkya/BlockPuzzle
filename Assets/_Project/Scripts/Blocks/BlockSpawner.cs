@@ -256,6 +256,40 @@ namespace BlockPuzzle.Blocks
             return true;
         }
 
+        // v2.0.0-dev.3: Resolve saved Classic tray IDs against this scene's
+        // existing library. No changes to Reroll or Adventure Undo paths.
+        public bool TryResolveTrayBlockIds(string[] ids, out BlockDefinition[] definitions)
+        {
+            definitions = null;
+            if (ids == null || slots == null || ids.Length != slots.Length ||
+                blockLibrary == null)
+                return false;
+
+            var resolved = new BlockDefinition[ids.Length];
+            for (int i = 0; i < ids.Length; i++)
+            {
+                if (string.IsNullOrEmpty(ids[i])) continue;
+                BlockDefinition found = null;
+                int count = 0;
+                foreach (BlockDefinition definition in blockLibrary)
+                {
+                    if (definition == null || !definition.IsValid() ||
+                        !string.Equals(definition.BlockId, ids[i], StringComparison.Ordinal))
+                        continue;
+                    found = definition;
+                    count++;
+                }
+                // Reject missing or ambiguous block IDs instead of silently
+                // restoring the wrong shape.
+                if (count != 1) return false;
+                resolved[i] = found;
+            }
+
+            if (!CanRestoreTraySnapshot(resolved)) return false;
+            definitions = resolved;
+            return true;
+        }
+
         // Used by the Adventure Undo controller. A dragged block is temporarily
         // parented to DragLayer, so use BlockDragHandler.SourceTraySlot to find
         // which of the three slots it originally occupied.
