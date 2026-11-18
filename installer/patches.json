@@ -1,0 +1,185 @@
+{
+  "version": "v2.0.0-dev.4",
+  "patches": [
+    {
+      "path": "Assets/_Project/Scripts/Grid/GridCell.cs",
+      "name": "Add special cell enum",
+      "old": "namespace BlockPuzzle.Grid\n{\n    public sealed class GridCell\n",
+      "new": "namespace BlockPuzzle.Grid\n{\n    // Appended mechanics; no change to existing normal-cell behavior.\n    public enum SpecialCellKind\n    {\n        None = 0,\n        Locked = 1,\n        BreakableObstacle = 2\n    }\n\n    public sealed class GridCell\n"
+    },
+    {
+      "path": "Assets/_Project/Scripts/Grid/GridCell.cs",
+      "name": "Store cell kind",
+      "old": "        public int BlockId { get; private set; }\n\n        public GridCell(int row, int column)\n",
+      "new": "        public int BlockId { get; private set; }\n        public SpecialCellKind SpecialKind { get; private set; }\n\n        public GridCell(int row, int column)\n"
+    },
+    {
+      "path": "Assets/_Project/Scripts/Grid/GridCell.cs",
+      "name": "Guard placement and initialize special tile",
+      "old": "        public bool TryOccupy(int blockId)\n        {\n            if (IsOccupied)\n                return false;\n\n            IsOccupied = true;\n            BlockId = blockId;\n\n            return true;\n        }\n\n        public void Clear()\n",
+      "new": "        public bool TryOccupy(int blockId)\n        {\n            if (IsOccupied || SpecialKind != SpecialCellKind.None)\n                return false;\n\n            IsOccupied = true;\n            BlockId = blockId;\n\n            return true;\n        }\n\n        public bool TrySetSpecial(SpecialCellKind kind)\n        {\n            if (IsOccupied || SpecialKind != SpecialCellKind.None ||\n                (kind != SpecialCellKind.Locked &&\n                 kind != SpecialCellKind.BreakableObstacle))\n                return false;\n\n            SpecialKind = kind;\n            IsOccupied = true;\n            BlockId = kind == SpecialCellKind.Locked ? -3 : -4;\n            return true;\n        }\n\n        public void Clear()\n"
+    },
+    {
+      "path": "Assets/_Project/Scripts/Grid/GridCell.cs",
+      "name": "Reset special state with cell",
+      "old": "        public void Clear()\n        {\n            IsOccupied = false;\n            BlockId = -1;\n        }\n",
+      "new": "        public void Clear()\n        {\n            IsOccupied = false;\n            BlockId = -1;\n            SpecialKind = SpecialCellKind.None;\n        }\n"
+    },
+    {
+      "path": "Assets/_Project/Scripts/Grid/GridCellView.cs",
+      "name": "Add special colors",
+      "old": "        [Header(\"Clear Effect\")]\n        [SerializeField]\n        private Color clearFlashColor =\n",
+      "new": "        [Header(\"Adventure Special Cells - dev.4\")]\n        [SerializeField] private Color lockedColor =\n            new Color32(83, 72, 126, 255);\n        [SerializeField] private Color breakableColor =\n            new Color32(230, 131, 62, 255);\n\n        [Header(\"Clear Effect\")]\n        [SerializeField]\n        private Color clearFlashColor =\n"
+    },
+    {
+      "path": "Assets/_Project/Scripts/Grid/GridCellView.cs",
+      "name": "Render special cells",
+      "old": "            cellImage.color = hasPlacedColor\n                ? placedBlockColor\n                : defaultOccupiedColor;\n",
+      "new": "            if (cell.SpecialKind == SpecialCellKind.Locked)\n            {\n                cellImage.color = lockedColor;\n                return;\n            }\n\n            if (cell.SpecialKind == SpecialCellKind.BreakableObstacle)\n            {\n                cellImage.color = breakableColor;\n                return;\n            }\n\n            cellImage.color = hasPlacedColor\n                ? placedBlockColor\n                : defaultOccupiedColor;\n"
+    },
+    {
+      "path": "Assets/_Project/Scripts/Grid/GridManager.cs",
+      "name": "Expose cleared obstacle event",
+      "old": "        public event Action<LineClearResult> LinesCleared;\n        public event Action<BlockPlacementResult> BlockPlaced;\n",
+      "new": "        public event Action<LineClearResult> LinesCleared;\n        public event Action<BlockPlacementResult> BlockPlaced;\n        public event Action<int> ObstaclesCleared;\n"
+    },
+    {
+      "path": "Assets/_Project/Scripts/Grid/GridManager.cs",
+      "name": "Add special cell writer",
+      "old": "        public bool TryOccupyCell(\n            int row,\n            int column,\n            int blockId)\n",
+      "new": "        // Used when an opted-in Adventure level initializes or restores its board.\n        // Classic never calls this method.\n        public bool TrySetSpecialCell(int row, int column, SpecialCellKind kind)\n        {\n            GridCell cell = GetCell(row, column);\n            if (cell == null || !cell.TrySetSpecial(kind))\n                return false;\n\n            cellViews[row, column].Refresh();\n            return true;\n        }\n\n        public bool TryOccupyCell(\n            int row,\n            int column,\n            int blockId)\n"
+    },
+    {
+      "path": "Assets/_Project/Scripts/Grid/GridManager.cs",
+      "name": "Preserve locks in ordinary ClearCell",
+      "old": "        public bool ClearCell(int row, int column)\n        {\n            GridCell cell = GetCell(row, column);\n\n            if (cell == null)\n                return false;\n\n            cell.Clear();\n",
+      "new": "        public bool ClearCell(int row, int column, bool forceSpecial = false)\n        {\n            GridCell cell = GetCell(row, column);\n\n            if (cell == null ||\n                (!forceSpecial && cell.SpecialKind == SpecialCellKind.Locked))\n                return false;\n\n            cell.Clear();\n"
+    },
+    {
+      "path": "Assets/_Project/Scripts/Grid/GridManager.cs",
+      "name": "Count breakables in unique cleared cells",
+      "old": "            // STEP 4: Clear every selected cell once.\n            List<Vector2Int> cleared = new(cellsToClear);\n\n            cleared.Sort((a, b) =>\n",
+      "new": "            // STEP 4: Clear every selected non-permanent cell once.\n            // Locks count toward filled lines but remain on the board.\n            List<Vector2Int> cleared = new();\n            foreach (Vector2Int position in cellsToClear)\n            {\n                if (cells[position.x, position.y].SpecialKind !=\n                    SpecialCellKind.Locked)\n                    cleared.Add(position);\n            }\n\n            cleared.Sort((a, b) =>\n"
+    },
+    {
+      "path": "Assets/_Project/Scripts/Grid/GridManager.cs",
+      "name": "Notify cleared breakables exactly once",
+      "old": "            foreach (Vector2Int position in cleared)\n            {\n                ClearCell(position.x, position.y);\n            }\n\n            LineClearResult result = new LineClearResult(\n",
+      "new": "            int obstaclesCleared = 0;\n            foreach (Vector2Int position in cleared)\n            {\n                if (cells[position.x, position.y].SpecialKind ==\n                    SpecialCellKind.BreakableObstacle)\n                    obstaclesCleared++;\n\n                ClearCell(position.x, position.y);\n            }\n\n            if (obstaclesCleared > 0)\n                ObstaclesCleared?.Invoke(obstaclesCleared);\n\n            LineClearResult result = new LineClearResult(\n"
+    },
+    {
+      "path": "Assets/_Project/Scripts/Adventure/AdventureLevelDefinition.cs",
+      "name": "Imports for special data",
+      "old": "using UnityEngine;\n\nnamespace BlockPuzzle.Adventure\n",
+      "new": "using System;\nusing System.Collections.Generic;\nusing UnityEngine;\nusing BlockPuzzle.Grid;\n\nnamespace BlockPuzzle.Adventure\n"
+    },
+    {
+      "path": "Assets/_Project/Scripts/Adventure/AdventureLevelDefinition.cs",
+      "name": "Append objective enum values; preserve IDs",
+      "old": "    public enum AdventureObjective\n    {\n        ReachScore,\n        ClearLines,\n        PlaceBlocks\n    }\n\n    [CreateAssetMenu(\n",
+      "new": "    public enum AdventureObjective\n    {\n        ReachScore,\n        ClearLines,\n        PlaceBlocks,\n        ClearObstacles,\n        ClearRows,\n        ClearColumns\n    }\n\n    [Serializable]\n    public sealed class AdventureSpecialCell\n    {\n        [Min(0)] public int row;\n        [Min(0)] public int column;\n        public SpecialCellKind kind = SpecialCellKind.Locked;\n    }\n\n    [CreateAssetMenu(\n"
+    },
+    {
+      "path": "Assets/_Project/Scripts/Adventure/AdventureLevelDefinition.cs",
+      "name": "Add opt-in special layouts",
+      "old": "        [SerializeField, Min(1)] private int moveLimit = 15;\n\n        public int LevelId => levelId;\n",
+      "new": "        [SerializeField, Min(1)] private int moveLimit = 15;\n\n        [Header(\"Special Board - v2.0.0-dev.4 (opt-in)\")]\n        [SerializeField] private bool enableSpecialBoard = false;\n        [SerializeField] private List<AdventureSpecialCell> specialCells = new();\n\n        public bool EnableSpecialBoard => enableSpecialBoard;\n        public IReadOnlyList<AdventureSpecialCell> SpecialCells => specialCells;\n\n        public int LevelId => levelId;\n"
+    },
+    {
+      "path": "Assets/_Project/Scripts/Adventure/AdventureGameController.cs",
+      "name": "Import pure level validator",
+      "old": "using BlockPuzzle.UI;\n\nnamespace BlockPuzzle.Adventure\n",
+      "new": "using BlockPuzzle.UI;\nusing BlockPuzzle.AdventureRules;\nusing System.Collections.Generic;\n\nnamespace BlockPuzzle.Adventure\n"
+    },
+    {
+      "path": "Assets/_Project/Scripts/Adventure/AdventureGameController.cs",
+      "name": "Initialize special boards before BlockSpawner.Start",
+      "old": "namespace BlockPuzzle.Adventure\n{\n    public sealed class AdventureGameController : MonoBehaviour\n",
+      "new": "namespace BlockPuzzle.Adventure\n{\n    // Apply level layouts before BlockSpawner.Start selects the first tray.\n    [DefaultExecutionOrder(-100)]\n    public sealed class AdventureGameController : MonoBehaviour\n"
+    },
+    {
+      "path": "Assets/_Project/Scripts/Adventure/AdventureGameController.cs",
+      "name": "Add objective counters",
+      "old": "        private int totalLinesCleared;\n        private int totalBlocksPlaced;\n        private int extraMovePurchases;\n",
+      "new": "        private int totalLinesCleared;\n        private int totalBlocksPlaced;\n        private int totalRowsCleared;\n        private int totalColumnsCleared;\n        private int totalObstaclesCleared;\n        private int extraMovePurchases;\n"
+    },
+    {
+      "path": "Assets/_Project/Scripts/Adventure/AdventureGameController.cs",
+      "name": "Extend undo progression snapshot",
+      "old": "            public readonly int Moves;\n            public readonly int Lines;\n            public readonly int Blocks;\n\n            public UndoProgressState(int moves, int lines, int blocks)\n            {\n                Moves = moves;\n                Lines = lines;\n                Blocks = blocks;\n            }\n        }\n\n        public UndoProgressState CaptureUndoProgress() =>\n            new UndoProgressState(movesUsed, totalLinesCleared, totalBlocksPlaced);\n",
+      "new": "            public readonly int Moves;\n            public readonly int Lines;\n            public readonly int Blocks;\n            public readonly int Rows;\n            public readonly int Columns;\n            public readonly int Obstacles;\n\n            public UndoProgressState(int moves, int lines, int blocks,\n                int rows = 0, int columns = 0, int obstacles = 0)\n            {\n                Moves = moves;\n                Lines = lines;\n                Blocks = blocks;\n                Rows = rows;\n                Columns = columns;\n                Obstacles = obstacles;\n            }\n        }\n\n        public UndoProgressState CaptureUndoProgress() =>\n            new UndoProgressState(movesUsed, totalLinesCleared, totalBlocksPlaced,\n                totalRowsCleared, totalColumnsCleared, totalObstaclesCleared);\n"
+    },
+    {
+      "path": "Assets/_Project/Scripts/Adventure/AdventureGameController.cs",
+      "name": "Restore extended undo counters",
+      "old": "            movesUsed = state.Moves;\n            totalLinesCleared = state.Lines;\n            totalBlocksPlaced = state.Blocks;\n            RefreshObjectiveUI();\n",
+      "new": "            movesUsed = state.Moves;\n            totalLinesCleared = state.Lines;\n            totalBlocksPlaced = state.Blocks;\n            totalRowsCleared = state.Rows;\n            totalColumnsCleared = state.Columns;\n            totalObstaclesCleared = state.Obstacles;\n            RefreshObjectiveUI();\n"
+    },
+    {
+      "path": "Assets/_Project/Scripts/Adventure/AdventureGameController.cs",
+      "name": "Subscribe obstacle clearing",
+      "old": "        private void OnEnable()\n        {\n            if (gridManager != null) gridManager.BlockPlaced += HandleBlockPlaced;\n            if (blockSpawner != null) blockSpawner.TrayChanged += HandleTrayChanged;\n        }\n",
+      "new": "        private void OnEnable()\n        {\n            if (gridManager != null)\n            {\n                gridManager.BlockPlaced += HandleBlockPlaced;\n                gridManager.ObstaclesCleared += HandleObstaclesCleared;\n            }\n            if (blockSpawner != null) blockSpawner.TrayChanged += HandleTrayChanged;\n        }\n"
+    },
+    {
+      "path": "Assets/_Project/Scripts/Adventure/AdventureGameController.cs",
+      "name": "Apply validated board before live play",
+      "old": "            movesUsed = 0;\n            totalLinesCleared = 0;\n            totalBlocksPlaced = 0;\n            extraMovePurchases = 0;\n",
+      "new": "            if (!TryInitializeSpecialBoard())\n            {\n                Debug.LogError(\"[Adventure] Invalid special level layout. Returning to map.\");\n                ReturnToMapImmediate();\n                return;\n            }\n\n            movesUsed = 0;\n            totalLinesCleared = 0;\n            totalBlocksPlaced = 0;\n            totalRowsCleared = 0;\n            totalColumnsCleared = 0;\n            totalObstaclesCleared = 0;\n            extraMovePurchases = 0;\n"
+    },
+    {
+      "path": "Assets/_Project/Scripts/Adventure/AdventureGameController.cs",
+      "name": "Validate and configure special board",
+      "old": "        private bool ValidateReferences()\n        {\n",
+      "new": "        private bool TryInitializeSpecialBoard()\n        {\n            // Legacy levels remain unchanged. A new obstacle objective without\n            // an opted-in board would be impossible to complete.\n            if (!currentLevel.EnableSpecialBoard)\n                return currentLevel.Objective != AdventureObjective.ClearObstacles;\n\n            if (gridManager.GetCell(0, 0) == null)\n                gridManager.GenerateGrid();\n            if (gridManager.GetCell(0, 0) == null || currentLevel.SpecialCells == null)\n                return false;\n\n            var specs = new List<SpecialCellSpec>();\n            int obstacleCount = 0;\n            foreach (AdventureSpecialCell cell in currentLevel.SpecialCells)\n            {\n                if (cell == null)\n                    return false;\n                specs.Add(new SpecialCellSpec(cell.row, cell.column, (int)cell.kind));\n                if (cell.kind == SpecialCellKind.BreakableObstacle)\n                    obstacleCount++;\n            }\n\n            if (!SpecialBoardRules.TryValidate(\n                gridManager.Rows, gridManager.Columns, specs, out string reason))\n            {\n                Debug.LogError(\"[Adventure] Invalid special board: \" + reason);\n                return false;\n            }\n\n            if (currentLevel.Objective == AdventureObjective.ClearObstacles &&\n                (obstacleCount == 0 || obstacleCount < currentLevel.TargetValue))\n            {\n                Debug.LogError(\"[Adventure] ClearObstacles target exceeds initial obstacles.\");\n                return false;\n            }\n\n            // No cells are mutated before all layout checks finish.\n            foreach (AdventureSpecialCell cell in currentLevel.SpecialCells)\n            {\n                if (!gridManager.TrySetSpecialCell(cell.row, cell.column, cell.kind))\n                {\n                    Debug.LogError(\"[Adventure] Could not place special tile at (\" +\n                        cell.row + \",\" + cell.column + \").\");\n                    return false;\n                }\n            }\n\n            Debug.Log(\"[Adventure] Special board initialized: \" + specs.Count + \" cells.\");\n            return true;\n        }\n\n        private bool ValidateReferences()\n        {\n"
+    },
+    {
+      "path": "Assets/_Project/Scripts/Adventure/AdventureGameController.cs",
+      "name": "Unsubscribe obstacle clearing",
+      "old": "        private void OnDisable()\n        {\n            if (gridManager != null) gridManager.BlockPlaced -= HandleBlockPlaced;\n            if (blockSpawner != null) blockSpawner.TrayChanged -= HandleTrayChanged;\n",
+      "new": "        private void OnDisable()\n        {\n            if (gridManager != null)\n            {\n                gridManager.BlockPlaced -= HandleBlockPlaced;\n                gridManager.ObstaclesCleared -= HandleObstaclesCleared;\n            }\n            if (blockSpawner != null) blockSpawner.TrayChanged -= HandleTrayChanged;\n"
+    },
+    {
+      "path": "Assets/_Project/Scripts/Adventure/AdventureGameController.cs",
+      "name": "Track row, column, obstacle outcomes",
+      "old": "            if (placement.LineClear != null)\n                totalLinesCleared += placement.LineClear.TotalLines;\n            RefreshObjectiveUI();\n            RequestEvaluation();\n        }\n\n        private void HandleTrayChanged()\n",
+      "new": "            if (placement.LineClear != null)\n            {\n                totalLinesCleared += placement.LineClear.TotalLines;\n                totalRowsCleared += placement.LineClear.ClearedRowCount;\n                totalColumnsCleared += placement.LineClear.ClearedColumnCount;\n            }\n            RefreshObjectiveUI();\n            RequestEvaluation();\n        }\n\n        private void HandleObstaclesCleared(int count)\n        {\n            if (initialized && !gameFinished && count > 0)\n                totalObstaclesCleared += count;\n        }\n\n        private void HandleTrayChanged()\n"
+    },
+    {
+      "path": "Assets/_Project/Scripts/Adventure/AdventureGameController.cs",
+      "name": "Add objective progress cases",
+      "old": "                case AdventureObjective.ReachScore: return scoreManager.CurrentScore;\n                case AdventureObjective.ClearLines: return totalLinesCleared;\n                case AdventureObjective.PlaceBlocks: return totalBlocksPlaced;\n                default: return 0;\n",
+      "new": "                case AdventureObjective.ReachScore: return scoreManager.CurrentScore;\n                case AdventureObjective.ClearLines: return totalLinesCleared;\n                case AdventureObjective.PlaceBlocks: return totalBlocksPlaced;\n                case AdventureObjective.ClearObstacles: return totalObstaclesCleared;\n                case AdventureObjective.ClearRows: return totalRowsCleared;\n                case AdventureObjective.ClearColumns: return totalColumnsCleared;\n                default: return 0;\n"
+    },
+    {
+      "path": "Assets/_Project/Scripts/Adventure/AdventureGameController.cs",
+      "name": "Add objective labels",
+      "old": "                case AdventureObjective.ReachScore: return \"REACH SCORE\";\n                case AdventureObjective.ClearLines: return \"CLEAR LINES\";\n                case AdventureObjective.PlaceBlocks: return \"PLACE BLOCKS\";\n                default: return \"OBJECTIVE\";\n",
+      "new": "                case AdventureObjective.ReachScore: return \"REACH SCORE\";\n                case AdventureObjective.ClearLines: return \"CLEAR LINES\";\n                case AdventureObjective.PlaceBlocks: return \"PLACE BLOCKS\";\n                case AdventureObjective.ClearObstacles: return \"CLEAR OBSTACLES\";\n                case AdventureObjective.ClearRows: return \"CLEAR ROWS\";\n                case AdventureObjective.ClearColumns: return \"CLEAR COLUMNS\";\n                default: return \"OBJECTIVE\";\n"
+    },
+    {
+      "path": "Assets/_Project/Scripts/Adventure/AdventureUndoController.cs",
+      "name": "Capture special kind for undo",
+      "old": "            public bool Occupied;\n            public int BlockId;\n            public Color Color;\n",
+      "new": "            public bool Occupied;\n            public int BlockId;\n            public Color Color;\n            public SpecialCellKind SpecialKind;\n"
+    },
+    {
+      "path": "Assets/_Project/Scripts/Adventure/AdventureUndoController.cs",
+      "name": "Snapshot special kind",
+      "old": "                    Occupied = cell.IsOccupied,\n                    BlockId = cell.BlockId,\n                    Color = blockColor\n",
+      "new": "                    Occupied = cell.IsOccupied,\n                    BlockId = cell.BlockId,\n                    Color = blockColor,\n                    SpecialKind = cell.SpecialKind\n"
+    },
+    {
+      "path": "Assets/_Project/Scripts/Adventure/AdventureUndoController.cs",
+      "name": "Force-clear special cells only during Undo",
+      "old": "                    gridManager.ClearCell(row, col);\n\n                for (int row = 0; row < gridManager.Rows; row++)\n",
+      "new": "                    gridManager.ClearCell(row, col, true);\n\n                for (int row = 0; row < gridManager.Rows; row++)\n"
+    },
+    {
+      "path": "Assets/_Project/Scripts/Adventure/AdventureUndoController.cs",
+      "name": "Restore tile kind before regular occupied states",
+      "old": "                    CellState state = snapshot.Cells[row, col];\n                    if (state.Occupied)\n                        gridManager.TryOccupyCell(row, col, state.BlockId, state.Color);\n",
+      "new": "                    CellState state = snapshot.Cells[row, col];\n                    if (state.SpecialKind != SpecialCellKind.None)\n                    {\n                        if (!gridManager.TrySetSpecialCell(row, col, state.SpecialKind))\n                        {\n                            Debug.LogError(\"[Undo] Failed restoring special cell.\");\n                            available = null;\n                            return false;\n                        }\n                    }\n                    else if (state.Occupied)\n                    {\n                        gridManager.TryOccupyCell(row, col, state.BlockId, state.Color);\n                    }\n"
+    }
+  ]
+}

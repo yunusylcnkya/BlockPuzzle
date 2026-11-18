@@ -25,6 +25,12 @@ namespace BlockPuzzle.Grid
         private Color invalidPreviewColor =
             new Color32(240, 108, 121, 255);
 
+        [Header("Adventure Special Cells - dev.4")]
+        [SerializeField] private Color lockedColor =
+            new Color32(83, 72, 126, 255);
+        [SerializeField] private Color breakableColor =
+            new Color32(230, 131, 62, 255);
+
         [Header("Clear Effect")]
         [SerializeField]
         private Color clearFlashColor =
@@ -91,6 +97,18 @@ namespace BlockPuzzle.Grid
             if (!cell.IsOccupied)
             {
                 cellImage.color = emptyColor;
+                return;
+            }
+
+            if (cell.SpecialKind == SpecialCellKind.Locked)
+            {
+                cellImage.color = lockedColor;
+                return;
+            }
+
+            if (cell.SpecialKind == SpecialCellKind.BreakableObstacle)
+            {
+                cellImage.color = breakableColor;
                 return;
             }
 

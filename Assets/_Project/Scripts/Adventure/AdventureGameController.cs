@@ -11,9 +11,13 @@ using BlockPuzzle.Grid;
 using BlockPuzzle.SaveSystem;
 using BlockPuzzle.Monetization;
 using BlockPuzzle.UI;
+using BlockPuzzle.AdventureRules;
+using System.Collections.Generic;
 
 namespace BlockPuzzle.Adventure
 {
+    // Apply level layouts before BlockSpawner.Start selects the first tray.
+    [DefaultExecutionOrder(-100)]
     public sealed class AdventureGameController : MonoBehaviour
     {
         [Header("Level Data")]
@@ -56,6 +60,9 @@ namespace BlockPuzzle.Adventure
         private int movesUsed;
         private int totalLinesCleared;
         private int totalBlocksPlaced;
+        private int totalRowsCleared;
+        private int totalColumnsCleared;
+        private int totalObstaclesCleared;
         private int extraMovePurchases;
         private bool failedDueToMoveLimit;
         private bool gameFinished;
@@ -163,17 +170,25 @@ namespace BlockPuzzle.Adventure
             public readonly int Moves;
             public readonly int Lines;
             public readonly int Blocks;
+            public readonly int Rows;
+            public readonly int Columns;
+            public readonly int Obstacles;
 
-            public UndoProgressState(int moves, int lines, int blocks)
+            public UndoProgressState(int moves, int lines, int blocks,
+                int rows = 0, int columns = 0, int obstacles = 0)
             {
                 Moves = moves;
                 Lines = lines;
                 Blocks = blocks;
+                Rows = rows;
+                Columns = columns;
+                Obstacles = obstacles;
             }
         }
 
         public UndoProgressState CaptureUndoProgress() =>
-            new UndoProgressState(movesUsed, totalLinesCleared, totalBlocksPlaced);
+            new UndoProgressState(movesUsed, totalLinesCleared, totalBlocksPlaced,
+                totalRowsCleared, totalColumnsCleared, totalObstaclesCleared);
 
         public void RestoreUndoProgress(UndoProgressState state)
         {
@@ -185,6 +200,9 @@ namespace BlockPuzzle.Adventure
             movesUsed = state.Moves;
             totalLinesCleared = state.Lines;
             totalBlocksPlaced = state.Blocks;
+            totalRowsCleared = state.Rows;
+            totalColumnsCleared = state.Columns;
+            totalObstaclesCleared = state.Obstacles;
             RefreshObjectiveUI();
             RequestEvaluation();
         }
@@ -196,7 +214,11 @@ namespace BlockPuzzle.Adventure
 
         private void OnEnable()
         {
-            if (gridManager != null) gridManager.BlockPlaced += HandleBlockPlaced;
+            if (gridManager != null)
+            {
+                gridManager.BlockPlaced += HandleBlockPlaced;
+                gridManager.ObstaclesCleared += HandleObstaclesCleared;
+            }
             if (blockSpawner != null) blockSpawner.TrayChanged += HandleTrayChanged;
         }
 
@@ -228,9 +250,19 @@ namespace BlockPuzzle.Adventure
                 return;
             }
 
+            if (!TryInitializeSpecialBoard())
+            {
+                Debug.LogError("[Adventure] Invalid special level layout. Returning to map.");
+                ReturnToMapImmediate();
+                return;
+            }
+
             movesUsed = 0;
             totalLinesCleared = 0;
             totalBlocksPlaced = 0;
+            totalRowsCleared = 0;
+            totalColumnsCleared = 0;
+            totalObstaclesCleared = 0;
             extraMovePurchases = 0;
             failedDueToMoveLimit = false;
             gameFinished = false;
@@ -247,6 +279,58 @@ namespace BlockPuzzle.Adventure
             Debug.Log($"[Adventure] Level {currentLevel.LevelId} started.");
         }
 
+        private bool TryInitializeSpecialBoard()
+        {
+            // Legacy levels remain unchanged. A new obstacle objective without
+            // an opted-in board would be impossible to complete.
+            if (!currentLevel.EnableSpecialBoard)
+                return currentLevel.Objective != AdventureObjective.ClearObstacles;
+
+            if (gridManager.GetCell(0, 0) == null)
+                gridManager.GenerateGrid();
+            if (gridManager.GetCell(0, 0) == null || currentLevel.SpecialCells == null)
+                return false;
+
+            var specs = new List<SpecialCellSpec>();
+            int obstacleCount = 0;
+            foreach (AdventureSpecialCell cell in currentLevel.SpecialCells)
+            {
+                if (cell == null)
+                    return false;
+                specs.Add(new SpecialCellSpec(cell.row, cell.column, (int)cell.kind));
+                if (cell.kind == SpecialCellKind.BreakableObstacle)
+                    obstacleCount++;
+            }
+
+            if (!SpecialBoardRules.TryValidate(
+                gridManager.Rows, gridManager.Columns, specs, out string reason))
+            {
+                Debug.LogError("[Adventure] Invalid special board: " + reason);
+                return false;
+            }
+
+            if (currentLevel.Objective == AdventureObjective.ClearObstacles &&
+                (obstacleCount == 0 || obstacleCount < currentLevel.TargetValue))
+            {
+                Debug.LogError("[Adventure] ClearObstacles target exceeds initial obstacles.");
+                return false;
+            }
+
+            // No cells are mutated before all layout checks finish.
+            foreach (AdventureSpecialCell cell in currentLevel.SpecialCells)
+            {
+                if (!gridManager.TrySetSpecialCell(cell.row, cell.column, cell.kind))
+                {
+                    Debug.LogError("[Adventure] Could not place special tile at (" +
+                        cell.row + "," + cell.column + ").");
+                    return false;
+                }
+            }
+
+            Debug.Log("[Adventure] Special board initialized: " + specs.Count + " cells.");
+            return true;
+        }
+
         private bool ValidateReferences()
         {
             return catalog != null && gridManager != null && blockSpawner != null &&
@@ -258,7 +342,11 @@ namespace BlockPuzzle.Adventure
 
         private void OnDisable()
         {
-            if (gridManager != null) gridManager.BlockPlaced -= HandleBlockPlaced;
+            if (gridManager != null)
+            {
+                gridManager.BlockPlaced -= HandleBlockPlaced;
+                gridManager.ObstaclesCleared -= HandleObstaclesCleared;
+            }
             if (blockSpawner != null) blockSpawner.TrayChanged -= HandleTrayChanged;
             if (pendingEvaluation != null)
             {
@@ -273,9 +361,19 @@ namespace BlockPuzzle.Adventure
             movesUsed++;
             totalBlocksPlaced++;
             if (placement.LineClear != null)
+            {
                 totalLinesCleared += placement.LineClear.TotalLines;
+                totalRowsCleared += placement.LineClear.ClearedRowCount;
+                totalColumnsCleared += placement.LineClear.ClearedColumnCount;
+            }
             RefreshObjectiveUI();
             RequestEvaluation();
+        }
+
+        private void HandleObstaclesCleared(int count)
+        {
+            if (initialized && !gameFinished && count > 0)
+                totalObstaclesCleared += count;
         }
 
         private void HandleTrayChanged()
@@ -292,6 +390,9 @@ namespace BlockPuzzle.Adventure
                 case AdventureObjective.ReachScore: return scoreManager.CurrentScore;
                 case AdventureObjective.ClearLines: return totalLinesCleared;
                 case AdventureObjective.PlaceBlocks: return totalBlocksPlaced;
+                case AdventureObjective.ClearObstacles: return totalObstaclesCleared;
+                case AdventureObjective.ClearRows: return totalRowsCleared;
+                case AdventureObjective.ClearColumns: return totalColumnsCleared;
                 default: return 0;
             }
         }
@@ -304,6 +405,9 @@ namespace BlockPuzzle.Adventure
                 case AdventureObjective.ReachScore: return "REACH SCORE";
                 case AdventureObjective.ClearLines: return "CLEAR LINES";
                 case AdventureObjective.PlaceBlocks: return "PLACE BLOCKS";
+                case AdventureObjective.ClearObstacles: return "CLEAR OBSTACLES";
+                case AdventureObjective.ClearRows: return "CLEAR ROWS";
+                case AdventureObjective.ClearColumns: return "CLEAR COLUMNS";
                 default: return "OBJECTIVE";
             }
         }

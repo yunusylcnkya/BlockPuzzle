@@ -1,0 +1,18 @@
+{
+  "name": "BlockPuzzle.AdventureRules.EditModeTests",
+  "rootNamespace": "BlockPuzzle.Tests.EditModeAdventure",
+  "references": [
+    "BlockPuzzle.AdventureRules",
+    "UnityEngine.TestRunner",
+    "UnityEditor.TestRunner"
+  ],
+  "includePlatforms": ["Editor"],
+  "excludePlatforms": [],
+  "allowUnsafeCode": false,
+  "overrideReferences": true,
+  "precompiledReferences": ["nunit.framework.dll"],
+  "autoReferenced": false,
+  "defineConstraints": [],
+  "versionDefines": [],
+  "noEngineReferences": false
+}

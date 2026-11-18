@@ -50,6 +50,7 @@ namespace BlockPuzzle.Adventure
             public bool Occupied;
             public int BlockId;
             public Color Color;
+            public SpecialCellKind SpecialKind;
         }
 
         private void OnEnable()
@@ -131,7 +132,8 @@ namespace BlockPuzzle.Adventure
                 {
                     Occupied = cell.IsOccupied,
                     BlockId = cell.BlockId,
-                    Color = blockColor
+                    Color = blockColor,
+                    SpecialKind = cell.SpecialKind
                 };
             }
 
@@ -176,14 +178,25 @@ namespace BlockPuzzle.Adventure
                 gridManager.ClearPreview();
                 for (int row = 0; row < gridManager.Rows; row++)
                 for (int col = 0; col < gridManager.Columns; col++)
-                    gridManager.ClearCell(row, col);
+                    gridManager.ClearCell(row, col, true);
 
                 for (int row = 0; row < gridManager.Rows; row++)
                 for (int col = 0; col < gridManager.Columns; col++)
                 {
                     CellState state = snapshot.Cells[row, col];
-                    if (state.Occupied)
+                    if (state.SpecialKind != SpecialCellKind.None)
+                    {
+                        if (!gridManager.TrySetSpecialCell(row, col, state.SpecialKind))
+                        {
+                            Debug.LogError("[Undo] Failed restoring special cell.");
+                            available = null;
+                            return false;
+                        }
+                    }
+                    else if (state.Occupied)
+                    {
                         gridManager.TryOccupyCell(row, col, state.BlockId, state.Color);
+                    }
                 }
 
                 scoreManager.RestoreScoreState(snapshot.Score);

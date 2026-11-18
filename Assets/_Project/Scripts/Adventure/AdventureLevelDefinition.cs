@@ -1,5 +1,8 @@
 
+using System;
+using System.Collections.Generic;
 using UnityEngine;
+using BlockPuzzle.Grid;
 
 namespace BlockPuzzle.Adventure
 {
@@ -15,7 +18,18 @@ namespace BlockPuzzle.Adventure
     {
         ReachScore,
         ClearLines,
-        PlaceBlocks
+        PlaceBlocks,
+        ClearObstacles,
+        ClearRows,
+        ClearColumns
+    }
+
+    [Serializable]
+    public sealed class AdventureSpecialCell
+    {
+        [Min(0)] public int row;
+        [Min(0)] public int column;
+        public SpecialCellKind kind = SpecialCellKind.Locked;
     }
 
     [CreateAssetMenu(
@@ -41,6 +55,13 @@ namespace BlockPuzzle.Adventure
         [SerializeField, Min(1)] private int targetValue = 100;
 
         [SerializeField, Min(1)] private int moveLimit = 15;
+
+        [Header("Special Board - v2.0.0-dev.4 (opt-in)")]
+        [SerializeField] private bool enableSpecialBoard = false;
+        [SerializeField] private List<AdventureSpecialCell> specialCells = new();
+
+        public bool EnableSpecialBoard => enableSpecialBoard;
+        public IReadOnlyList<AdventureSpecialCell> SpecialCells => specialCells;
 
         public int LevelId => levelId;
         public string LevelName => levelName;

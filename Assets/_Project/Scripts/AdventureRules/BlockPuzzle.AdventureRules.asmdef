@@ -1,0 +1,14 @@
+{
+  "name": "BlockPuzzle.AdventureRules",
+  "rootNamespace": "BlockPuzzle.AdventureRules",
+  "references": [],
+  "includePlatforms": [],
+  "excludePlatforms": [],
+  "allowUnsafeCode": false,
+  "overrideReferences": false,
+  "precompiledReferences": [],
+  "autoReferenced": true,
+  "defineConstraints": [],
+  "versionDefines": [],
+  "noEngineReferences": true
+}

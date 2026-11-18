@@ -29,6 +29,7 @@ namespace BlockPuzzle.Grid
         // Other systems can subscribe to line clears.
         public event Action<LineClearResult> LinesCleared;
         public event Action<BlockPlacementResult> BlockPlaced;
+        public event Action<int> ObstaclesCleared;
 
         public int Rows => rows;
         public int Columns => columns;
@@ -173,6 +174,18 @@ namespace BlockPuzzle.Grid
         }
 
 
+        // Used when an opted-in Adventure level initializes or restores its board.
+        // Classic never calls this method.
+        public bool TrySetSpecialCell(int row, int column, SpecialCellKind kind)
+        {
+            GridCell cell = GetCell(row, column);
+            if (cell == null || !cell.TrySetSpecial(kind))
+                return false;
+
+            cellViews[row, column].Refresh();
+            return true;
+        }
+
         public bool TryOccupyCell(
             int row,
             int column,
@@ -208,11 +221,12 @@ namespace BlockPuzzle.Grid
 
 
 
-        public bool ClearCell(int row, int column)
+        public bool ClearCell(int row, int column, bool forceSpecial = false)
         {
             GridCell cell = GetCell(row, column);
 
-            if (cell == null)
+            if (cell == null ||
+                (!forceSpecial && cell.SpecialKind == SpecialCellKind.Locked))
                 return false;
 
             cell.Clear();
@@ -517,8 +531,15 @@ namespace BlockPuzzle.Grid
                 }
             }
 
-            // STEP 4: Clear every selected cell once.
-            List<Vector2Int> cleared = new(cellsToClear);
+            // STEP 4: Clear every selected non-permanent cell once.
+            // Locks count toward filled lines but remain on the board.
+            List<Vector2Int> cleared = new();
+            foreach (Vector2Int position in cellsToClear)
+            {
+                if (cells[position.x, position.y].SpecialKind !=
+                    SpecialCellKind.Locked)
+                    cleared.Add(position);
+            }
 
             cleared.Sort((a, b) =>
             {
@@ -529,10 +550,18 @@ namespace BlockPuzzle.Grid
                     : a.y.CompareTo(b.y);
             });
 
+            int obstaclesCleared = 0;
             foreach (Vector2Int position in cleared)
             {
+                if (cells[position.x, position.y].SpecialKind ==
+                    SpecialCellKind.BreakableObstacle)
+                    obstaclesCleared++;
+
                 ClearCell(position.x, position.y);
             }
+
+            if (obstaclesCleared > 0)
+                ObstaclesCleared?.Invoke(obstaclesCleared);
 
             LineClearResult result = new LineClearResult(
                 completedRows.Count,
