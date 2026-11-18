@@ -28,6 +28,8 @@ namespace BlockPuzzle.ClassicPersistence
         public int combo;
         public int lastEarnedPoints;
         public int lastClearedLines;
+        // Dev.4 hotfix: additive V2 field. Old V2 saves deserialize as zero.
+        public int rewardedRerollsUsed;
         public float multiplier = 1f;
 
         // Three slots in their original positions. Empty string = used slot.

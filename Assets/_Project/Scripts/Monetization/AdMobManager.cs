@@ -515,6 +515,52 @@ namespace BlockPuzzle.Monetization
 #endif
         }
 
+        /// <summary>
+        /// Plays an ordinary rewarded ad for a *gameplay* action rather than
+        /// awarding Adventure coins. The action executes only after the SDK
+        /// reports a verified earned reward; ad dismissal grants nothing.
+        /// The old ShowRewardedForCoins() path is unchanged.
+        /// </summary>
+        public bool ShowRewardedForGameplay(Action onEarned)
+        {
+#if UNITY_EDITOR
+            Debug.Log("[AdMob Rewarded] Android device required.");
+            return false;
+#else
+            if (onEarned == null || !IsRewardedReady) return false;
+            RewardedAd currentAd = rewardedAd;
+            showingRewarded = true;
+            rewardGrantedForCurrentAd = false;
+            RewardedStateChanged?.Invoke();
+            int rewardProcessed = 0;
+            try
+            {
+                currentAd.Show(reward =>
+                {
+                    if (System.Threading.Interlocked.Exchange(ref rewardProcessed, 1) != 0)
+                        return;
+                    MobileAdsEventExecutor.ExecuteInUpdate(() =>
+                    {
+                        if (this == null) return;
+                        rewardGrantedForCurrentAd = true;
+                        try { onEarned(); }
+                        catch (Exception exception)
+                        {
+                            Debug.LogError("[AdMob Rewarded] Gameplay grant failed: " + exception);
+                        }
+                    });
+                });
+                return true;
+            }
+            catch (Exception exception)
+            {
+                Debug.LogError("[AdMob Rewarded] Gameplay show exception: " + exception.Message);
+                FinishRewardedAd();
+                return false;
+            }
+#endif
+        }
+
         private void FinishRewardedAd()
         {
             if (!showingRewarded) return;

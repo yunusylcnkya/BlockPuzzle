@@ -30,6 +30,23 @@ namespace BlockPuzzle.Classic
         private bool restoring;
         private bool protectExistingSave;
         private bool runClosed;
+        private int rewardedRerollsUsed;
+        public int RewardedRerollsUsed => rewardedRerollsUsed;
+        public bool IsReady => ready && !restoring && !protectExistingSave && !runClosed;
+
+        /// <summary>Called after an ad-earned reshuffle, at most five per run.</summary>
+        public void RegisterRewardedReroll()
+        {
+            if (!IsReady || rewardedRerollsUsed >= 5) return;
+            rewardedRerollsUsed++;
+            SaveCommittedState();
+        }
+
+        /// <summary>Save the board/tray after a successful rewarded Undo.</summary>
+        public void SaveAfterRewardedAction()
+        {
+            if (IsReady) SaveCommittedState();
+        }
 
         private void OnEnable()
         {
@@ -60,6 +77,7 @@ namespace BlockPuzzle.Classic
                 }
                 else
                 {
+                    rewardedRerollsUsed = snapshot.rewardedRerollsUsed;
                     Debug.Log("[ClassicContinue] Restored Classic run; score=" + snapshot.score +
                               ", cells=" + snapshot.occupiedCells.Length);
                 }
@@ -201,6 +219,7 @@ namespace BlockPuzzle.Classic
                 lastClearedLines = score.LastLines,
                 multiplier = score.Multiplier,
                 occupiedCells = cells.ToArray(),
+                rewardedRerollsUsed = rewardedRerollsUsed,
                 trayBlockIds = new string[3]
             };
             for (int i = 0; i < tray.Length; i++)
@@ -215,7 +234,10 @@ namespace BlockPuzzle.Classic
             if (ready && !runClosed && !protectExistingSave &&
                 GameManager.Instance != null &&
                 GameManager.Instance.CurrentState == GameState.GameOver)
-                EndRun();
+            {
+                ClassicRewardedTools tools = GetComponent<ClassicRewardedTools>();
+                if (tools == null || !tools.CanRescue) EndRun();
+            }
         }
 
         private void OnApplicationPause(bool paused)
@@ -242,7 +264,10 @@ namespace BlockPuzzle.Classic
             if (ready && !protectExistingSave && !runClosed &&
                 GameManager.Instance != null &&
                 GameManager.Instance.CurrentState == GameState.GameOver)
-                EndRun();
+            {
+                ClassicRewardedTools tools = GetComponent<ClassicRewardedTools>();
+                if (tools == null || !tools.CanRescue) EndRun();
+            }
         }
     }
 }

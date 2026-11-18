@@ -22,6 +22,8 @@ namespace BlockPuzzle.ClassicPersistence
                 return Fail("Invalid score state", out reason);
             if (!Finite(run.multiplier) || run.multiplier < 1f || run.multiplier > 100f)
                 return Fail("Invalid score multiplier", out reason);
+            if (run.rewardedRerollsUsed < 0 || run.rewardedRerollsUsed > 5)
+                return Fail("Invalid rewarded shuffle usage", out reason);
             if (run.trayBlockIds == null || run.trayBlockIds.Length != 3)
                 return Fail("Invalid tray slot count", out reason);
             int present = 0;

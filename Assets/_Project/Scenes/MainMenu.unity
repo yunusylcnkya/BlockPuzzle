@@ -427,6 +427,7 @@ GameObject:
   - component: {fileID: 157233728}
   - component: {fileID: 157233727}
   - component: {fileID: 157233726}
+  - component: {fileID: 157233729}
   m_Layer: 5
   m_Name: PrivacyChoicesButton
   m_TagString: Untagged
@@ -548,6 +549,20 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 157233724}
   m_CullTransparentMesh: 1
+--- !u!114 &157233729
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 157233724}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: b72342c9e4fe9934aa1c4a61b187ad48, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::BlockPuzzle.UI.UIButtonPressEffect
+  pressedScale: 0.94
+  animationDuration: 0.1
 --- !u!1 &191614638
 GameObject:
   m_ObjectHideFlags: 0

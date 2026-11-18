@@ -8,6 +8,7 @@ using BlockPuzzle.Core;
 using BlockPuzzle.Gameplay;
 using BlockPuzzle.Grid;
 using BlockPuzzle.Monetization;
+using BlockPuzzle.SaveSystem;
 
 namespace BlockPuzzle.Classic
 {
@@ -28,6 +29,7 @@ namespace BlockPuzzle.Classic
 
 
         private bool isGameOver;
+        public bool IsGameOver => isGameOver;
         private Coroutine pendingCheck;
 
         private void Awake()
@@ -185,8 +187,28 @@ namespace BlockPuzzle.Classic
             );
         }
 
+        /// <summary>Called only after a completed rewarded Undo restored the board.</summary>
+        public void ResumeAfterRewardedUndo()
+        {
+            if (!isGameOver) return;
+            isGameOver = false;
+            if (gameOverPanel != null) gameOverPanel.SetActive(false);
+            foreach (BlockView block in blockSpawner.ActiveBlocks)
+            {
+                if (block == null) continue;
+                BlockDragHandler drag = block.GetComponent<BlockDragHandler>();
+                if (drag != null) drag.enabled = true;
+            }
+            if (GameManager.Instance != null)
+                GameManager.Instance.SetState(GameState.Playing);
+            RequestMoveCheck();
+        }
+
         private void RestartGameImmediate()
         {
+            // A reward-offer Game Over may still have a resumable snapshot.
+            // Explicit Retry always starts a clean run.
+            ClassicRunSaveService.CloseRun();
             if (GameManager.Instance != null)
             {
                 GameManager.Instance.LoadScene(
@@ -215,6 +237,9 @@ namespace BlockPuzzle.Classic
 
         private void ReturnToMainMenuImmediate()
         {
+            // Close only after Game Over; leaving active Classic play still
+            // preserves Classic Continue.
+            if (isGameOver) ClassicRunSaveService.CloseRun();
             if (GameManager.Instance != null)
             {
                 GameManager.Instance.LoadScene(
