@@ -1,0 +1,607 @@
+[
+  {
+    "id": 101,
+    "title": "FIRST CRACK",
+    "difficulty": "Easy",
+    "objective": "ClearObstacles",
+    "target": 1,
+    "moves": 24,
+    "specialCells": [
+      {
+        "kind": "BreakableObstacle",
+        "row": 0,
+        "column": 2
+      },
+      {
+        "kind": "BreakableObstacle",
+        "row": 0,
+        "column": 5
+      }
+    ]
+  },
+  {
+    "id": 102,
+    "title": "COLUMN GATE",
+    "difficulty": "Easy",
+    "objective": "ClearColumns",
+    "target": 1,
+    "moves": 26,
+    "specialCells": [
+      {
+        "kind": "Locked",
+        "row": 0,
+        "column": 1
+      },
+      {
+        "kind": "Locked",
+        "row": 7,
+        "column": 6
+      },
+      {
+        "kind": "BreakableObstacle",
+        "row": 2,
+        "column": 3
+      }
+    ]
+  },
+  {
+    "id": 103,
+    "title": "REINFORCED ROW",
+    "difficulty": "Easy",
+    "objective": "ClearRows",
+    "target": 1,
+    "moves": 26,
+    "specialCells": [
+      {
+        "kind": "BreakableObstacle",
+        "row": 3,
+        "column": 2
+      },
+      {
+        "kind": "BreakableObstacle",
+        "row": 3,
+        "column": 5
+      },
+      {
+        "kind": "Locked",
+        "row": 6,
+        "column": 1
+      }
+    ]
+  },
+  {
+    "id": 104,
+    "title": "SAFE PASSAGE",
+    "difficulty": "Easy",
+    "objective": "PlaceBlocks",
+    "target": 8,
+    "moves": 21,
+    "specialCells": [
+      {
+        "kind": "Locked",
+        "row": 1,
+        "column": 2
+      },
+      {
+        "kind": "Locked",
+        "row": 6,
+        "column": 6
+      },
+      {
+        "kind": "BreakableObstacle",
+        "row": 4,
+        "column": 4
+      }
+    ]
+  },
+  {
+    "id": 105,
+    "title": "DOUBLE BREAK",
+    "difficulty": "Medium",
+    "objective": "ClearObstacles",
+    "target": 2,
+    "moves": 27,
+    "specialCells": [
+      {
+        "kind": "BreakableObstacle",
+        "row": 0,
+        "column": 1
+      },
+      {
+        "kind": "BreakableObstacle",
+        "row": 0,
+        "column": 5
+      },
+      {
+        "kind": "BreakableObstacle",
+        "row": 5,
+        "column": 3
+      },
+      {
+        "kind": "Locked",
+        "row": 7,
+        "column": 7
+      }
+    ]
+  },
+  {
+    "id": 106,
+    "title": "NARROW AISLE",
+    "difficulty": "Medium",
+    "objective": "ClearColumns",
+    "target": 1,
+    "moves": 29,
+    "specialCells": [
+      {
+        "kind": "Locked",
+        "row": 0,
+        "column": 0
+      },
+      {
+        "kind": "Locked",
+        "row": 3,
+        "column": 3
+      },
+      {
+        "kind": "Locked",
+        "row": 7,
+        "column": 7
+      },
+      {
+        "kind": "BreakableObstacle",
+        "row": 2,
+        "column": 4
+      }
+    ]
+  },
+  {
+    "id": 107,
+    "title": "TWO LINES",
+    "difficulty": "Medium",
+    "objective": "ClearLines",
+    "target": 2,
+    "moves": 29,
+    "specialCells": [
+      {
+        "kind": "BreakableObstacle",
+        "row": 2,
+        "column": 3
+      },
+      {
+        "kind": "BreakableObstacle",
+        "row": 5,
+        "column": 3
+      },
+      {
+        "kind": "Locked",
+        "row": 7,
+        "column": 1
+      },
+      {
+        "kind": "Locked",
+        "row": 0,
+        "column": 6
+      }
+    ]
+  },
+  {
+    "id": 108,
+    "title": "OPENING SCORE",
+    "difficulty": "Medium",
+    "objective": "ReachScore",
+    "target": 700,
+    "moves": 27,
+    "specialCells": [
+      {
+        "kind": "BreakableObstacle",
+        "row": 0,
+        "column": 1
+      },
+      {
+        "kind": "BreakableObstacle",
+        "row": 4,
+        "column": 5
+      },
+      {
+        "kind": "Locked",
+        "row": 6,
+        "column": 6
+      }
+    ]
+  },
+  {
+    "id": 109,
+    "title": "CROSSROADS",
+    "difficulty": "Medium",
+    "objective": "ClearRows",
+    "target": 2,
+    "moves": 32,
+    "specialCells": [
+      {
+        "kind": "BreakableObstacle",
+        "row": 1,
+        "column": 3
+      },
+      {
+        "kind": "BreakableObstacle",
+        "row": 1,
+        "column": 5
+      },
+      {
+        "kind": "BreakableObstacle",
+        "row": 6,
+        "column": 2
+      },
+      {
+        "kind": "Locked",
+        "row": 4,
+        "column": 7
+      }
+    ]
+  },
+  {
+    "id": 110,
+    "title": "BREAK THE WALL",
+    "difficulty": "Medium",
+    "objective": "ClearObstacles",
+    "target": 2,
+    "moves": 32,
+    "specialCells": [
+      {
+        "kind": "BreakableObstacle",
+        "row": 5,
+        "column": 1
+      },
+      {
+        "kind": "BreakableObstacle",
+        "row": 5,
+        "column": 4
+      },
+      {
+        "kind": "Locked",
+        "row": 2,
+        "column": 6
+      },
+      {
+        "kind": "Locked",
+        "row": 7,
+        "column": 6
+      }
+    ]
+  },
+  {
+    "id": 111,
+    "title": "PATCHWORK",
+    "difficulty": "Hard",
+    "objective": "PlaceBlocks",
+    "target": 9,
+    "moves": 29,
+    "specialCells": [
+      {
+        "kind": "Locked",
+        "row": 1,
+        "column": 1
+      },
+      {
+        "kind": "Locked",
+        "row": 6,
+        "column": 2
+      },
+      {
+        "kind": "Locked",
+        "row": 3,
+        "column": 6
+      },
+      {
+        "kind": "BreakableObstacle",
+        "row": 4,
+        "column": 4
+      }
+    ]
+  },
+  {
+    "id": 112,
+    "title": "FORKED PATH",
+    "difficulty": "Hard",
+    "objective": "ClearColumns",
+    "target": 2,
+    "moves": 34,
+    "specialCells": [
+      {
+        "kind": "BreakableObstacle",
+        "row": 2,
+        "column": 1
+      },
+      {
+        "kind": "BreakableObstacle",
+        "row": 4,
+        "column": 1
+      },
+      {
+        "kind": "Locked",
+        "row": 0,
+        "column": 4
+      },
+      {
+        "kind": "Locked",
+        "row": 7,
+        "column": 5
+      }
+    ]
+  },
+  {
+    "id": 113,
+    "title": "RISING PRESSURE",
+    "difficulty": "Hard",
+    "objective": "ClearObstacles",
+    "target": 3,
+    "moves": 33,
+    "specialCells": [
+      {
+        "kind": "BreakableObstacle",
+        "row": 0,
+        "column": 1
+      },
+      {
+        "kind": "BreakableObstacle",
+        "row": 0,
+        "column": 4
+      },
+      {
+        "kind": "BreakableObstacle",
+        "row": 0,
+        "column": 7
+      },
+      {
+        "kind": "Locked",
+        "row": 5,
+        "column": 5
+      },
+      {
+        "kind": "Locked",
+        "row": 6,
+        "column": 2
+      }
+    ]
+  },
+  {
+    "id": 114,
+    "title": "STEP BY STEP",
+    "difficulty": "Hard",
+    "objective": "ClearRows",
+    "target": 2,
+    "moves": 34,
+    "specialCells": [
+      {
+        "kind": "BreakableObstacle",
+        "row": 3,
+        "column": 1
+      },
+      {
+        "kind": "BreakableObstacle",
+        "row": 3,
+        "column": 6
+      },
+      {
+        "kind": "Locked",
+        "row": 1,
+        "column": 2
+      },
+      {
+        "kind": "Locked",
+        "row": 6,
+        "column": 4
+      }
+    ]
+  },
+  {
+    "id": 115,
+    "title": "HARD RESET",
+    "difficulty": "Hard",
+    "objective": "ClearLines",
+    "target": 3,
+    "moves": 36,
+    "specialCells": [
+      {
+        "kind": "Locked",
+        "row": 1,
+        "column": 0
+      },
+      {
+        "kind": "Locked",
+        "row": 6,
+        "column": 7
+      },
+      {
+        "kind": "BreakableObstacle",
+        "row": 4,
+        "column": 2
+      },
+      {
+        "kind": "BreakableObstacle",
+        "row": 4,
+        "column": 5
+      }
+    ]
+  },
+  {
+    "id": 116,
+    "title": "SCORE UNDER FIRE",
+    "difficulty": "Hard",
+    "objective": "ReachScore",
+    "target": 1050,
+    "moves": 36,
+    "specialCells": [
+      {
+        "kind": "Locked",
+        "row": 1,
+        "column": 1
+      },
+      {
+        "kind": "Locked",
+        "row": 2,
+        "column": 6
+      },
+      {
+        "kind": "Locked",
+        "row": 6,
+        "column": 4
+      },
+      {
+        "kind": "BreakableObstacle",
+        "row": 0,
+        "column": 3
+      },
+      {
+        "kind": "BreakableObstacle",
+        "row": 5,
+        "column": 3
+      }
+    ]
+  },
+  {
+    "id": 117,
+    "title": "BREAK THREE",
+    "difficulty": "Expert",
+    "objective": "ClearObstacles",
+    "target": 3,
+    "moves": 36,
+    "specialCells": [
+      {
+        "kind": "BreakableObstacle",
+        "row": 7,
+        "column": 1
+      },
+      {
+        "kind": "BreakableObstacle",
+        "row": 7,
+        "column": 3
+      },
+      {
+        "kind": "BreakableObstacle",
+        "row": 7,
+        "column": 6
+      },
+      {
+        "kind": "Locked",
+        "row": 2,
+        "column": 2
+      },
+      {
+        "kind": "Locked",
+        "row": 5,
+        "column": 5
+      }
+    ]
+  },
+  {
+    "id": 118,
+    "title": "CROWDED BOARD",
+    "difficulty": "Expert",
+    "objective": "PlaceBlocks",
+    "target": 10,
+    "moves": 30,
+    "specialCells": [
+      {
+        "kind": "Locked",
+        "row": 0,
+        "column": 0
+      },
+      {
+        "kind": "Locked",
+        "row": 0,
+        "column": 7
+      },
+      {
+        "kind": "Locked",
+        "row": 7,
+        "column": 0
+      },
+      {
+        "kind": "Locked",
+        "row": 7,
+        "column": 7
+      },
+      {
+        "kind": "BreakableObstacle",
+        "row": 3,
+        "column": 3
+      },
+      {
+        "kind": "BreakableObstacle",
+        "row": 4,
+        "column": 4
+      }
+    ]
+  },
+  {
+    "id": 119,
+    "title": "COLUMN SPRINT",
+    "difficulty": "Expert",
+    "objective": "ClearColumns",
+    "target": 2,
+    "moves": 37,
+    "specialCells": [
+      {
+        "kind": "Locked",
+        "row": 3,
+        "column": 1
+      },
+      {
+        "kind": "Locked",
+        "row": 3,
+        "column": 6
+      },
+      {
+        "kind": "BreakableObstacle",
+        "row": 1,
+        "column": 4
+      },
+      {
+        "kind": "BreakableObstacle",
+        "row": 6,
+        "column": 4
+      }
+    ]
+  },
+  {
+    "id": 120,
+    "title": "MASTER BREAKER",
+    "difficulty": "Expert",
+    "objective": "ClearObstacles",
+    "target": 4,
+    "moves": 40,
+    "specialCells": [
+      {
+        "kind": "BreakableObstacle",
+        "row": 1,
+        "column": 1
+      },
+      {
+        "kind": "BreakableObstacle",
+        "row": 1,
+        "column": 3
+      },
+      {
+        "kind": "BreakableObstacle",
+        "row": 1,
+        "column": 5
+      },
+      {
+        "kind": "BreakableObstacle",
+        "row": 1,
+        "column": 7
+      },
+      {
+        "kind": "Locked",
+        "row": 6,
+        "column": 0
+      },
+      {
+        "kind": "Locked",
+        "row": 6,
+        "column": 7
+      }
+    ]
+  }
+]
