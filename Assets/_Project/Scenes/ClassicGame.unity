@@ -268,6 +268,7 @@ GameObject:
   - component: {fileID: 155668313}
   - component: {fileID: 155668312}
   - component: {fileID: 155668314}
+  - component: {fileID: 155668315}
   m_Layer: 5
   m_Name: BoardContainer
   m_TagString: Untagged
@@ -347,6 +348,22 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::BlockPuzzle.Grid.ResponsiveBoardLayout
   widthRatio: 0.88
   maxHeightRatio: 0.5
+--- !u!114 &155668315
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 155668310}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 88b2d6a7fcc2f1d4cb958be399635711, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::BlockPuzzle.Gameplay.BoardShakeFeedback
+  gridManager: {fileID: 159645396}
+  enableShake: 1
+  pixelsPerLine: 2.5
+  duration: 0.13
 --- !u!1 &159645394
 GameObject:
   m_ObjectHideFlags: 0
@@ -6227,10 +6244,10 @@ RectTransform:
   m_Children: []
   m_Father: {fileID: 1221745813}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
-  m_AnchorMin: {x: 0, y: 0}
-  m_AnchorMax: {x: 1, y: 1}
+  m_AnchorMin: {x: 0.5, y: 0.5}
+  m_AnchorMax: {x: 0.5, y: 0.5}
   m_AnchoredPosition: {x: 0, y: 0}
-  m_SizeDelta: {x: 0, y: 0}
+  m_SizeDelta: {x: 347.1727, y: 113.199905}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &1595794566
 MonoBehaviour:
@@ -6279,12 +6296,12 @@ MonoBehaviour:
   m_faceColor:
     serializedVersion: 2
     rgba: 4294967295
-  m_fontSize: 48
+  m_fontSize: 44
   m_fontSizeBase: 48
   m_fontWeight: 400
   m_enableAutoSizing: 1
-  m_fontSizeMin: 19
-  m_fontSizeMax: 54
+  m_fontSizeMin: 10
+  m_fontSizeMax: 44
   m_fontStyle: 0
   m_HorizontalAlignment: 2
   m_VerticalAlignment: 512

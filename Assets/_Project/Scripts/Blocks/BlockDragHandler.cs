@@ -19,6 +19,12 @@ namespace BlockPuzzle.Blocks
         [SerializeField, Range(0.2f, 1f)]
         private float dragAlpha = 0.70f;
 
+        [Header("Visual Drag Follow - v2.0.0-dev.5.1")]
+        [SerializeField, Range(0.01f, 0.12f)]
+        private float dragSmoothTime = 0.035f;
+        private Vector2 pointerTarget;
+        private Vector2 pointerVelocity;
+
         private static int nextBlockId = 1;
 
         // Preserve existing Adventure Undo callbacks.
@@ -70,6 +76,14 @@ namespace BlockPuzzle.Blocks
             dragLayer = layer;
         }
 
+        private void Update()
+        {
+            if (!isDragging) return;
+            rect.anchoredPosition = Vector2.SmoothDamp(
+                rect.anchoredPosition, pointerTarget, ref pointerVelocity,
+                dragSmoothTime, Mathf.Infinity, Time.unscaledDeltaTime);
+        }
+
         public void OnBeginDrag(PointerEventData eventData)
         {
             if (gridManager == null || blockSpawner == null ||
@@ -91,7 +105,9 @@ namespace BlockPuzzle.Blocks
             rect.localScale = Vector3.one * scale;
             canvasGroup.alpha = dragAlpha;
             canvasGroup.blocksRaycasts = false;
+            pointerVelocity = Vector2.zero;
             UpdateDragPosition(eventData);
+            rect.anchoredPosition = pointerTarget;
         }
 
         public void OnDrag(PointerEventData eventData)
@@ -151,7 +167,7 @@ namespace BlockPuzzle.Blocks
 
             if (RectTransformUtility.ScreenPointToLocalPointInRectangle(
                 dragLayer, targetScreenPoint, uiCamera, out Vector2 fingerLocal))
-                rect.anchoredPosition = fingerLocal;
+                pointerTarget = fingerLocal;
 
             gridManager.ClearPreview();
             hasTarget = false;
@@ -167,10 +183,9 @@ namespace BlockPuzzle.Blocks
             gridManager.ShowPlacementPreview(
                 blockView.Definition, targetRow, targetColumn);
 
-            Vector3 worldCenter = gridManager.GetPlacementCenterWorld(
-                blockView.Definition, targetRow, targetColumn);
-            Vector3 localCenter = dragLayer.InverseTransformPoint(worldCenter);
-            rect.anchoredPosition = new Vector2(localCenter.x, localCenter.y);
+            // Deliberately do NOT snap the dragged block to the grid.
+            // The green/red cell preview is grid-aligned; the visual block
+            // continuously tracks the finger. Placement uses row/column above.
         }
     }
 }

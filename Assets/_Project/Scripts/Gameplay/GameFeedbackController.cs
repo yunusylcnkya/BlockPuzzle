@@ -98,6 +98,12 @@ namespace BlockPuzzle.Gameplay
             PlayClip(comboClip);
         }
 
+        public void ResumeAfterRewardedContinue()
+        {
+            gameEnded = false;
+            consecutiveClearMoves = 0;
+        }
+
         public void PlayGameOver()
         {
             if (gameEnded)

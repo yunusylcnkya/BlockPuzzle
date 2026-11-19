@@ -375,6 +375,31 @@ namespace BlockPuzzle.Blocks
             return true;
         }
 
+        /// <summary>
+        /// Rewarded Classic rescue only: replace the entire tray with 3 new
+        /// shapes. Every generated shape has at least one placement on the
+        /// restored board. Does not consume the five regular shuffle credits.
+        /// </summary>
+        public bool TryGenerateRescueTray()
+        {
+            if (!HasValidSpawnReferences() || IsAnyBlockDragging) return false;
+            List<BlockDefinition> placeable = GetPlaceableDefinitions();
+            if (placeable.Count == 0) return false;
+
+            var pool = new List<BlockDefinition>(placeable);
+            var replacement = new BlockDefinition[3];
+            for (int i = 0; i < replacement.Length; i++)
+            {
+                if (pool.Count == 0) pool.AddRange(placeable);
+                int pick = UnityEngine.Random.Range(0, pool.Count);
+                replacement[i] = pool[pick];
+                pool.RemoveAt(pick);
+            }
+            if (!RestoreTraySnapshot(replacement)) return false;
+            RerollCompleted?.Invoke(); // Undo of the old terminal move is consumed.
+            return true;
+        }
+
         private bool IsInTraySlot(BlockView block)
         {
             Transform parent = block.transform.parent;

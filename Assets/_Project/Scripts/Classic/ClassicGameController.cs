@@ -192,6 +192,8 @@ namespace BlockPuzzle.Classic
         {
             if (!isGameOver) return;
             isGameOver = false;
+            if (feedbackController != null)
+                feedbackController.ResumeAfterRewardedContinue();
             if (gameOverPanel != null) gameOverPanel.SetActive(false);
             foreach (BlockView block in blockSpawner.ActiveBlocks)
             {

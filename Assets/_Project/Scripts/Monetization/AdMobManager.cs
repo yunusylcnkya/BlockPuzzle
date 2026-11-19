@@ -47,6 +47,7 @@ namespace BlockPuzzle.Monetization
         private bool showingAd;
         private bool showingRewarded;
         private bool rewardGrantedForCurrentAd;
+        private bool audioPausedBeforeFullscreen;
         private bool privacyOptionsOpen;
         private bool applicationPaused;
         private bool? lastConsentAllowed;
@@ -484,6 +485,7 @@ namespace BlockPuzzle.Monetization
 #else
             if (!IsRewardedReady) return false;
             RewardedAd currentAd = rewardedAd;
+            audioPausedBeforeFullscreen = AudioListener.pause;
             showingRewarded = true;
             rewardGrantedForCurrentAd = false;
             RewardedStateChanged?.Invoke();
@@ -529,6 +531,7 @@ namespace BlockPuzzle.Monetization
 #else
             if (onEarned == null || !IsRewardedReady) return false;
             RewardedAd currentAd = rewardedAd;
+            audioPausedBeforeFullscreen = AudioListener.pause;
             showingRewarded = true;
             rewardGrantedForCurrentAd = false;
             RewardedStateChanged?.Invoke();
@@ -565,6 +568,7 @@ namespace BlockPuzzle.Monetization
         {
             if (!showingRewarded) return;
             showingRewarded = false;
+            RestoreAudioAfterFullscreen();
             Debug.Log("[AdMob Rewarded] Closed; reward granted=" +
                       rewardGrantedForCurrentAd);
             DestroyRewarded();
@@ -620,6 +624,7 @@ namespace BlockPuzzle.Monetization
 
             transitionCount = 0;
             lastAdTime = Time.realtimeSinceStartup;
+            audioPausedBeforeFullscreen = AudioListener.pause;
             showingAd = true;
             pendingContinuation = continuation;
             Debug.Log("[AdMob] Showing interstitial.");
@@ -638,6 +643,7 @@ namespace BlockPuzzle.Monetization
         {
             if (!showingAd) return;
             showingAd = false;
+            RestoreAudioAfterFullscreen();
             DestroyInterstitial();
             if (clearAdsAfterFullScreen)
             {
@@ -648,6 +654,13 @@ namespace BlockPuzzle.Monetization
             pendingContinuation = null;
             if (CanLoadAds()) LoadInterstitial();
             InvokeContinuation(continuation);
+        }
+
+        private void RestoreAudioAfterFullscreen()
+        {
+            if (!audioPausedBeforeFullscreen && AudioListener.pause)
+                AudioListener.pause = false;
+            BlockPuzzle.Gameplay.BackgroundMusicController.Instance?.RefreshSettings();
         }
 
         private static void InvokeContinuation(Action continuation)

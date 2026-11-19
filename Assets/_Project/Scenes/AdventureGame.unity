@@ -481,6 +481,7 @@ GameObject:
   - component: {fileID: 155668313}
   - component: {fileID: 155668312}
   - component: {fileID: 155668314}
+  - component: {fileID: 155668315}
   m_Layer: 5
   m_Name: BoardContainer
   m_TagString: Untagged
@@ -560,6 +561,22 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::BlockPuzzle.Grid.ResponsiveBoardLayout
   widthRatio: 0.88
   maxHeightRatio: 0.5
+--- !u!114 &155668315
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 155668310}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 88b2d6a7fcc2f1d4cb958be399635711, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::BlockPuzzle.Gameplay.BoardShakeFeedback
+  gridManager: {fileID: 159645396}
+  enableShake: 1
+  pixelsPerLine: 2.5
+  duration: 0.13
 --- !u!1 &159645394
 GameObject:
   m_ObjectHideFlags: 0

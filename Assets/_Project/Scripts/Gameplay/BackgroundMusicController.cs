@@ -110,6 +110,26 @@ namespace BlockPuzzle.Gameplay
             }
         }
 
+        private void OnEnable()
+        {
+            AudioSettings.OnAudioConfigurationChanged += OnAudioChanged;
+        }
+
+        private void OnDisable()
+        {
+            AudioSettings.OnAudioConfigurationChanged -= OnAudioChanged;
+        }
+
+        private void OnAudioChanged(bool deviceWasChanged)
+        {
+            RefreshSettings();
+        }
+
+        private void OnApplicationFocus(bool focus)
+        {
+            if (focus) RefreshSettings();
+        }
+
         private void OnApplicationPause(bool paused)
         {
             if (source == null)

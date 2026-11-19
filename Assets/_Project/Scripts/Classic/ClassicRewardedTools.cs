@@ -248,7 +248,7 @@ namespace BlockPuzzle.Classic
                 else if (CanRestore(available) &&
                     (IsPlaying || classicGame.IsGameOver))
                 {
-                    success = RestorePreviousTurn();
+                    success = RestorePreviousTurn(action == RewardAction.Continue);
                 }
                 Debug.Log("[ClassicAds] Rewarded action " + action + ": " + success);
             }
@@ -269,7 +269,7 @@ namespace BlockPuzzle.Classic
             RefreshButtons();
         }
 
-        private bool RestorePreviousTurn()
+        private bool RestorePreviousTurn(bool newThreeBlockTray)
         {
             TurnSnapshot snapshot = available;
             if (!CanRestore(snapshot)) return false;
@@ -280,6 +280,15 @@ namespace BlockPuzzle.Classic
             {
                 if (!ApplyTurn(before))
                     Debug.LogError("[ClassicAds] Undo rollback failed; inspect scene.");
+                return false;
+            }
+
+            // Continue is a stronger one-time rescue than ordinary Undo.
+            // The restored board is valid before we request any new blocks.
+            if (newThreeBlockTray && !blockSpawner.TryGenerateRescueTray())
+            {
+                if (!ApplyTurn(before))
+                    Debug.LogError("[ClassicAds] Could not roll back failed rescue shuffle.");
                 return false;
             }
 
@@ -334,7 +343,7 @@ namespace BlockPuzzle.Classic
                 continueAdButton.gameObject.SetActive(IsGameOverRescueAvailable() ||
                     (waitingForAd && classicGame != null && classicGame.IsGameOver));
                 continueAdButton.interactable = adReady && IsGameOverRescueAvailable();
-                SetText(continueAdButton, "WATCH AD & CONTINUE");
+                SetText(continueAdButton, "WATCH AD & CONTINUE + 3 BLOCKS");
             }
         }
 
