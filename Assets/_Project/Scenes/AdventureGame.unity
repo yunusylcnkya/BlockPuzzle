@@ -482,6 +482,7 @@ GameObject:
   - component: {fileID: 155668312}
   - component: {fileID: 155668314}
   - component: {fileID: 155668315}
+  - component: {fileID: 155668316}
   m_Layer: 5
   m_Name: BoardContainer
   m_TagString: Untagged
@@ -577,6 +578,29 @@ MonoBehaviour:
   enableShake: 1
   pixelsPerLine: 2.5
   duration: 0.13
+--- !u!114 &155668316
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 155668310}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 518429d2726745fbab183b37c0e0e8f0, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::BlockPuzzle.Gameplay.DirectionalLineClearFX
+  gridManager: {fileID: 159645396}
+  gridRoot: {fileID: 384949951}
+  enableEffect: 1
+  horizontalColor: {r: 0.15, g: 1, b: 0.75, a: 0.92}
+  verticalColor: {r: 0.3, g: 0.7, b: 1, a: 0.92}
+  intersectionColor: {r: 1, g: 0.96, b: 0.7, a: 1}
+  beamDuration: 0.32
+  tileBurstDuration: 0.28
+  edgeWaveDelay: 0.1
+  beamThicknessRatio: 0.12
+  maximumConcurrentElements: 96
 --- !u!1 &159645394
 GameObject:
   m_ObjectHideFlags: 0
