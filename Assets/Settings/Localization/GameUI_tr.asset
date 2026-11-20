@@ -238,6 +238,82 @@ MonoBehaviour:
     m_Localized: "B\xD6L\xDCM {0} A\xC7ILDI"
     m_Metadata:
       m_Items: []
+  - m_Id: 21138141171712
+    m_Localized: REKLAM HAZIR
+    m_Metadata:
+      m_Items: []
+  - m_Id: 21138178920448
+    m_Localized: +{0} JETON KAZANILDI!
+    m_Metadata:
+      m_Items: []
+  - m_Id: 21138178920449
+    m_Localized: "KARI\u015ETIRMA SINIRINA ULA\u015EILDI"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 21138178920450
+    m_Localized: "KARI\u015ETIRILACAK BLOK YOK"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 21138178920451
+    m_Localized: "YETERS\u0130Z JETON"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 21138178920452
+    m_Localized: SATIN ALMA TAMAMLANAMADI
+    m_Metadata:
+      m_Items: []
+  - m_Id: 21138178920453
+    m_Localized: "GER\u0130 ALINACAK HAMLE YOK"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 21138178920454
+    m_Localized: "GER\u0130 ALMA TAMAMLANAMADI"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 21138178920455
+    m_Localized: EK HAMLE KULLANILAMIYOR
+    m_Metadata:
+      m_Items: []
+  - m_Id: 21138178920456
+    m_Localized: 'JETON: {0}'
+    m_Metadata:
+      m_Items: []
+  - m_Id: 21138178920457
+    m_Localized: '{0} JETON'
+    m_Metadata:
+      m_Items: []
+  - m_Id: 21138178920458
+    m_Localized: HAMLE {0} / {1}
+    m_Metadata:
+      m_Items: []
+  - m_Id: 21138178920459
+    m_Localized: "B\xD6L\xDCM {0} \u2014 {1}"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 21138178920460
+    m_Localized: PUAN {0}
+    m_Metadata:
+      m_Items: []
+  - m_Id: 21138178920461
+    m_Localized: "EN Y\xDCKSEK {0}"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 21138178920462
+    m_Localized: "EN Y\xDCKSEK PUAN: {0}\nEN AZ HAMLE: {1}"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 21138178920463
+    m_Localized: "KALAN BLOKLARI DE\u011E\u0130\u015ET\u0130R ({0}/{1})"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 21138178920464
+    m_Localized: +{0} HAMLE ({1}/{2})
+    m_Metadata:
+      m_Items: []
+  - m_Id: 21138178920465
+    m_Localized: +{0} JETON
+    m_Metadata:
+      m_Items: []
   references:
     version: 2
     RefIds: []

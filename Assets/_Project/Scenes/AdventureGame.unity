@@ -358,6 +358,7 @@ GameObject:
   - component: {fileID: 117656172}
   - component: {fileID: 117656174}
   - component: {fileID: 117656173}
+  - component: {fileID: 117656175}
   m_Layer: 5
   m_Name: RerollPriceText
   m_TagString: Untagged
@@ -484,6 +485,18 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 117656171}
   m_CullTransparentMesh: 1
+--- !u!114 &117656175
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 117656171}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 578a83564ea7844499cb451ef8d86227, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::BlockPuzzle.UI.LocalizedDynamicLabel
 --- !u!1 &155668310
 GameObject:
   m_ObjectHideFlags: 0
@@ -1473,6 +1486,7 @@ GameObject:
   - component: {fileID: 288201287}
   - component: {fileID: 288201289}
   - component: {fileID: 288201288}
+  - component: {fileID: 288201290}
   m_Layer: 5
   m_Name: ResultTitleText
   m_TagString: Untagged
@@ -1599,6 +1613,18 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 288201286}
   m_CullTransparentMesh: 1
+--- !u!114 &288201290
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 288201286}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 578a83564ea7844499cb451ef8d86227, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::BlockPuzzle.UI.LocalizedDynamicLabel
 --- !u!1 &294044139
 GameObject:
   m_ObjectHideFlags: 0
@@ -2353,11 +2379,9 @@ MonoBehaviour:
   m_GameObject: {fileID: 417565298}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 6f8aa24e12c278341892f73867550adb, type: 3}
+  m_Script: {fileID: 11500000, guid: 578a83564ea7844499cb451ef8d86227, type: 3}
   m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::BlockPuzzle.UI.LocalizedTMPLabel
-  tableName: GameUI
-  entryKey: shop.reroll_desc
+  m_EditorClassIdentifier: Assembly-CSharp::BlockPuzzle.UI.LocalizedDynamicLabel
 --- !u!1 &421764125
 GameObject:
   m_ObjectHideFlags: 0
@@ -2744,6 +2768,7 @@ GameObject:
   - component: {fileID: 494515823}
   - component: {fileID: 494515825}
   - component: {fileID: 494515824}
+  - component: {fileID: 494515826}
   m_Layer: 5
   m_Name: ShopBalanceText
   m_TagString: Untagged
@@ -2870,6 +2895,18 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 494515822}
   m_CullTransparentMesh: 1
+--- !u!114 &494515826
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 494515822}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 578a83564ea7844499cb451ef8d86227, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::BlockPuzzle.UI.LocalizedDynamicLabel
 --- !u!1 &499493126
 GameObject:
   m_ObjectHideFlags: 0
@@ -3181,6 +3218,7 @@ GameObject:
   - component: {fileID: 534589729}
   - component: {fileID: 534589731}
   - component: {fileID: 534589730}
+  - component: {fileID: 534589732}
   m_Layer: 5
   m_Name: ResultDescriptionText
   m_TagString: Untagged
@@ -3307,6 +3345,18 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 534589728}
   m_CullTransparentMesh: 1
+--- !u!114 &534589732
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 534589728}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 578a83564ea7844499cb451ef8d86227, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::BlockPuzzle.UI.LocalizedDynamicLabel
 --- !u!1 &536480988
 GameObject:
   m_ObjectHideFlags: 0
@@ -5157,6 +5207,7 @@ GameObject:
   - component: {fileID: 911606948}
   - component: {fileID: 911606950}
   - component: {fileID: 911606949}
+  - component: {fileID: 911606951}
   m_Layer: 5
   m_Name: ResultScoreText
   m_TagString: Untagged
@@ -5283,6 +5334,18 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 911606947}
   m_CullTransparentMesh: 1
+--- !u!114 &911606951
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 911606947}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 578a83564ea7844499cb451ef8d86227, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::BlockPuzzle.UI.LocalizedDynamicLabel
 --- !u!1 &939298652
 GameObject:
   m_ObjectHideFlags: 0
@@ -5577,6 +5640,7 @@ GameObject:
   - component: {fileID: 994189078}
   - component: {fileID: 994189080}
   - component: {fileID: 994189079}
+  - component: {fileID: 994189081}
   m_Layer: 5
   m_Name: ResultBestText
   m_TagString: Untagged
@@ -5703,6 +5767,18 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 994189077}
   m_CullTransparentMesh: 1
+--- !u!114 &994189081
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 994189077}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 578a83564ea7844499cb451ef8d86227, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::BlockPuzzle.UI.LocalizedDynamicLabel
 --- !u!1 &1012824744
 GameObject:
   m_ObjectHideFlags: 0
@@ -6699,6 +6775,7 @@ GameObject:
   - component: {fileID: 1253409726}
   - component: {fileID: 1253409728}
   - component: {fileID: 1253409727}
+  - component: {fileID: 1253409729}
   m_Layer: 5
   m_Name: ExtraMovesDescriptionText
   m_TagString: Untagged
@@ -6825,6 +6902,18 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1253409725}
   m_CullTransparentMesh: 1
+--- !u!114 &1253409729
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1253409725}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 578a83564ea7844499cb451ef8d86227, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::BlockPuzzle.UI.LocalizedDynamicLabel
 --- !u!1 &1254808791
 GameObject:
   m_ObjectHideFlags: 0
@@ -7063,6 +7152,7 @@ GameObject:
   - component: {fileID: 1297378725}
   - component: {fileID: 1297378727}
   - component: {fileID: 1297378726}
+  - component: {fileID: 1297378728}
   m_Layer: 5
   m_Name: UndoPriceText
   m_TagString: Untagged
@@ -7189,6 +7279,18 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1297378724}
   m_CullTransparentMesh: 1
+--- !u!114 &1297378728
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1297378724}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 578a83564ea7844499cb451ef8d86227, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::BlockPuzzle.UI.LocalizedDynamicLabel
 --- !u!1 &1314912886
 GameObject:
   m_ObjectHideFlags: 0
@@ -7653,6 +7755,7 @@ GameObject:
   - component: {fileID: 1367154509}
   - component: {fileID: 1367154511}
   - component: {fileID: 1367154510}
+  - component: {fileID: 1367154512}
   m_Layer: 5
   m_Name: ObjectiveText
   m_TagString: Untagged
@@ -7779,6 +7882,18 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1367154508}
   m_CullTransparentMesh: 1
+--- !u!114 &1367154512
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1367154508}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 578a83564ea7844499cb451ef8d86227, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::BlockPuzzle.UI.LocalizedDynamicLabel
 --- !u!1 &1392748851
 GameObject:
   m_ObjectHideFlags: 0
@@ -8467,6 +8582,7 @@ GameObject:
   - component: {fileID: 1503657979}
   - component: {fileID: 1503657981}
   - component: {fileID: 1503657980}
+  - component: {fileID: 1503657982}
   m_Layer: 5
   m_Name: ExtraMovesPriceText
   m_TagString: Untagged
@@ -8593,6 +8709,18 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1503657978}
   m_CullTransparentMesh: 1
+--- !u!114 &1503657982
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1503657978}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 578a83564ea7844499cb451ef8d86227, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::BlockPuzzle.UI.LocalizedDynamicLabel
 --- !u!1 &1537467866
 GameObject:
   m_ObjectHideFlags: 0
@@ -10230,6 +10358,7 @@ GameObject:
   - component: {fileID: 1684115952}
   - component: {fileID: 1684115954}
   - component: {fileID: 1684115953}
+  - component: {fileID: 1684115955}
   m_Layer: 5
   m_Name: MovesText
   m_TagString: Untagged
@@ -10356,6 +10485,18 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1684115951}
   m_CullTransparentMesh: 1
+--- !u!114 &1684115955
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1684115951}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 578a83564ea7844499cb451ef8d86227, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::BlockPuzzle.UI.LocalizedDynamicLabel
 --- !u!1 &1756806500
 GameObject:
   m_ObjectHideFlags: 0
@@ -10442,6 +10583,7 @@ GameObject:
   - component: {fileID: 1764073384}
   - component: {fileID: 1764073386}
   - component: {fileID: 1764073385}
+  - component: {fileID: 1764073387}
   m_Layer: 5
   m_Name: ShopStatusText
   m_TagString: Untagged
@@ -10568,6 +10710,18 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1764073383}
   m_CullTransparentMesh: 1
+--- !u!114 &1764073387
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1764073383}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 578a83564ea7844499cb451ef8d86227, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::BlockPuzzle.UI.LocalizedDynamicLabel
 --- !u!1 &1798402450
 GameObject:
   m_ObjectHideFlags: 0
@@ -11051,6 +11205,7 @@ GameObject:
   - component: {fileID: 2063918900}
   - component: {fileID: 2063918902}
   - component: {fileID: 2063918901}
+  - component: {fileID: 2063918903}
   m_Layer: 5
   m_Name: LevelTitleText
   m_TagString: Untagged
@@ -11177,6 +11332,18 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 2063918899}
   m_CullTransparentMesh: 1
+--- !u!114 &2063918903
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2063918899}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 578a83564ea7844499cb451ef8d86227, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::BlockPuzzle.UI.LocalizedDynamicLabel
 --- !u!1 &2065717199
 GameObject:
   m_ObjectHideFlags: 0
@@ -11188,6 +11355,7 @@ GameObject:
   - component: {fileID: 2065717200}
   - component: {fileID: 2065717202}
   - component: {fileID: 2065717201}
+  - component: {fileID: 2065717203}
   m_Layer: 5
   m_Name: ResultCoinsText
   m_TagString: Untagged
@@ -11314,6 +11482,18 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 2065717199}
   m_CullTransparentMesh: 1
+--- !u!114 &2065717203
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2065717199}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 578a83564ea7844499cb451ef8d86227, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::BlockPuzzle.UI.LocalizedDynamicLabel
 --- !u!1 &2107861867
 GameObject:
   m_ObjectHideFlags: 0

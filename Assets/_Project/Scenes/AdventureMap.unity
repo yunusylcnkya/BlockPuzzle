@@ -130,6 +130,7 @@ GameObject:
   - component: {fileID: 930221}
   - component: {fileID: 930223}
   - component: {fileID: 930222}
+  - component: {fileID: 930224}
   m_Layer: 5
   m_Name: TotalCoinsText
   m_TagString: Untagged
@@ -257,6 +258,18 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 930220}
   m_CullTransparentMesh: 1
+--- !u!114 &930224
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 930220}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 578a83564ea7844499cb451ef8d86227, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::BlockPuzzle.UI.LocalizedDynamicLabel
 --- !u!1 &17975171
 GameObject:
   m_ObjectHideFlags: 0
@@ -1394,6 +1407,7 @@ GameObject:
   - component: {fileID: 1065729620}
   - component: {fileID: 1065729622}
   - component: {fileID: 1065729621}
+  - component: {fileID: 1065729623}
   m_Layer: 5
   m_Name: ProgressText
   m_TagString: Untagged
@@ -1520,6 +1534,18 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1065729619}
   m_CullTransparentMesh: 1
+--- !u!114 &1065729623
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1065729619}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 578a83564ea7844499cb451ef8d86227, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::BlockPuzzle.UI.LocalizedDynamicLabel
 --- !u!1 &1240727497
 GameObject:
   m_ObjectHideFlags: 0
@@ -1683,6 +1709,7 @@ GameObject:
   - component: {fileID: 1317972530}
   - component: {fileID: 1317972532}
   - component: {fileID: 1317972531}
+  - component: {fileID: 1317972533}
   m_Layer: 5
   m_Name: RewardStatusText
   m_TagString: Untagged
@@ -1809,6 +1836,18 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1317972529}
   m_CullTransparentMesh: 1
+--- !u!114 &1317972533
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1317972529}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 578a83564ea7844499cb451ef8d86227, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::BlockPuzzle.UI.LocalizedDynamicLabel
 --- !u!1 &1378208371
 GameObject:
   m_ObjectHideFlags: 0
@@ -2021,6 +2060,7 @@ GameObject:
   - component: {fileID: 1467633195}
   - component: {fileID: 1467633197}
   - component: {fileID: 1467633196}
+  - component: {fileID: 1467633198}
   m_Layer: 5
   m_Name: RewardAmountText
   m_TagString: Untagged
@@ -2147,6 +2187,18 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1467633194}
   m_CullTransparentMesh: 1
+--- !u!114 &1467633198
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1467633194}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 578a83564ea7844499cb451ef8d86227, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::BlockPuzzle.UI.LocalizedDynamicLabel
 --- !u!1 &1472352997
 GameObject:
   m_ObjectHideFlags: 0

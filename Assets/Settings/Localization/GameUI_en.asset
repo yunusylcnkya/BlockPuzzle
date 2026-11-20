@@ -238,6 +238,84 @@ MonoBehaviour:
     m_Localized: LEVEL {0} UNLOCKED
     m_Metadata:
       m_Items: []
+  - m_Id: 21138141171712
+    m_Localized: AD READY
+    m_Metadata:
+      m_Items: []
+  - m_Id: 21138178920448
+    m_Localized: +{0} COINS RECEIVED!
+    m_Metadata:
+      m_Items: []
+  - m_Id: 21138178920449
+    m_Localized: REROLL LIMIT REACHED
+    m_Metadata:
+      m_Items: []
+  - m_Id: 21138178920450
+    m_Localized: NO AVAILABLE REROLL
+    m_Metadata:
+      m_Items: []
+  - m_Id: 21138178920451
+    m_Localized: NOT ENOUGH COINS
+    m_Metadata:
+      m_Items: []
+  - m_Id: 21138178920452
+    m_Localized: PURCHASE NOT COMPLETED
+    m_Metadata:
+      m_Items: []
+  - m_Id: 21138178920453
+    m_Localized: NO MOVE TO UNDO
+    m_Metadata:
+      m_Items: []
+  - m_Id: 21138178920454
+    m_Localized: UNDO NOT COMPLETED
+    m_Metadata:
+      m_Items: []
+  - m_Id: 21138178920455
+    m_Localized: EXTRA MOVES UNAVAILABLE
+    m_Metadata:
+      m_Items: []
+  - m_Id: 21138178920456
+    m_Localized: 'COINS: {0}'
+    m_Metadata:
+      m_Items: []
+  - m_Id: 21138178920457
+    m_Localized: '{0} COINS'
+    m_Metadata:
+      m_Items: []
+  - m_Id: 21138178920458
+    m_Localized: MOVES {0} / {1}
+    m_Metadata:
+      m_Items: []
+  - m_Id: 21138178920459
+    m_Localized: "LEVEL {0} \u2014 {1}"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 21138178920460
+    m_Localized: SCORE {0}
+    m_Metadata:
+      m_Items: []
+  - m_Id: 21138178920461
+    m_Localized: BEST {0}
+    m_Metadata:
+      m_Items: []
+  - m_Id: 21138178920462
+    m_Localized: 'BEST SCORE: {0}
+
+      BEST MOVES: {1}'
+    m_Metadata:
+      m_Items: []
+  - m_Id: 21138178920463
+    m_Localized: REPLACE REMAINING BLOCKS ({0}/{1})
+    m_Metadata:
+      m_Items: []
+  - m_Id: 21138178920464
+    m_Localized: +{0} MOVES ({1}/{2})
+    m_Metadata:
+      m_Items: []
+  - m_Id: 21138178920465
+    m_Localized: +{0} COINS
+    m_Metadata:
+      m_Items: []
   references:
     version: 2
     RefIds: []

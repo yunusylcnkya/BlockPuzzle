@@ -235,6 +235,82 @@ MonoBehaviour:
     m_Key: map.unlocked
     m_Metadata:
       m_Items: []
+  - m_Id: 21138141171712
+    m_Key: ad.ready
+    m_Metadata:
+      m_Items: []
+  - m_Id: 21138178920448
+    m_Key: ad.coins_received
+    m_Metadata:
+      m_Items: []
+  - m_Id: 21138178920449
+    m_Key: shop.limit
+    m_Metadata:
+      m_Items: []
+  - m_Id: 21138178920450
+    m_Key: shop.no_reroll
+    m_Metadata:
+      m_Items: []
+  - m_Id: 21138178920451
+    m_Key: shop.not_enough_coins
+    m_Metadata:
+      m_Items: []
+  - m_Id: 21138178920452
+    m_Key: shop.purchase_failed
+    m_Metadata:
+      m_Items: []
+  - m_Id: 21138178920453
+    m_Key: shop.no_undo
+    m_Metadata:
+      m_Items: []
+  - m_Id: 21138178920454
+    m_Key: shop.undo_failed
+    m_Metadata:
+      m_Items: []
+  - m_Id: 21138178920455
+    m_Key: shop.no_extra
+    m_Metadata:
+      m_Items: []
+  - m_Id: 21138178920456
+    m_Key: ui.coins_count
+    m_Metadata:
+      m_Items: []
+  - m_Id: 21138178920457
+    m_Key: ui.coin_price
+    m_Metadata:
+      m_Items: []
+  - m_Id: 21138178920458
+    m_Key: ui.moves_count
+    m_Metadata:
+      m_Items: []
+  - m_Id: 21138178920459
+    m_Key: ui.level_name
+    m_Metadata:
+      m_Items: []
+  - m_Id: 21138178920460
+    m_Key: ui.score_count
+    m_Metadata:
+      m_Items: []
+  - m_Id: 21138178920461
+    m_Key: ui.best_count
+    m_Metadata:
+      m_Items: []
+  - m_Id: 21138178920462
+    m_Key: ui.best_result
+    m_Metadata:
+      m_Items: []
+  - m_Id: 21138178920463
+    m_Key: ui.reroll_usage
+    m_Metadata:
+      m_Items: []
+  - m_Id: 21138178920464
+    m_Key: ui.extra_moves_usage
+    m_Metadata:
+      m_Items: []
+  - m_Id: 21138178920465
+    m_Key: ui.coins_received
+    m_Metadata:
+      m_Items: []
   m_Metadata:
     m_Items: []
   m_KeyGenerator:
