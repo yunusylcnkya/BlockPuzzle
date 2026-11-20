@@ -39,7 +39,203 @@ MonoBehaviour:
     m_Metadata:
       m_Items: []
   - m_Id: 283558367232
-    m_Localized: "REKLAM \u0130ZLE VE DEVAM ET"
+    m_Localized: WATCH AD & CONTINUE
+    m_Metadata:
+      m_Items: []
+  - m_Id: 16259402256384
+    m_Localized: SETTINGS
+    m_Metadata:
+      m_Items: []
+  - m_Id: 16259452588032
+    m_Localized: MUSIC
+    m_Metadata:
+      m_Items: []
+  - m_Id: 16259452588033
+    m_Localized: SOUND EFFECTS
+    m_Metadata:
+      m_Items: []
+  - m_Id: 16259452588034
+    m_Localized: VIBRATION
+    m_Metadata:
+      m_Items: []
+  - m_Id: 16259452588035
+    m_Localized: CLOSE
+    m_Metadata:
+      m_Items: []
+  - m_Id: 16259452588036
+    m_Localized: PRIVACY CHOICES
+    m_Metadata:
+      m_Items: []
+  - m_Id: 16259452588037
+    m_Localized: MAIN MENU
+    m_Metadata:
+      m_Items: []
+  - m_Id: 16259452588038
+    m_Localized: BACK
+    m_Metadata:
+      m_Items: []
+  - m_Id: 16259452588039
+    m_Localized: BEST
+    m_Metadata:
+      m_Items: []
+  - m_Id: 16259452588040
+    m_Localized: YOUR SCORE
+    m_Metadata:
+      m_Items: []
+  - m_Id: 16259452588041
+    m_Localized: NEXT LEVEL
+    m_Metadata:
+      m_Items: []
+  - m_Id: 16259452588042
+    m_Localized: RETRY
+    m_Metadata:
+      m_Items: []
+  - m_Id: 16259452588043
+    m_Localized: ADVENTURE MAP
+    m_Metadata:
+      m_Items: []
+  - m_Id: 16259452588044
+    m_Localized: BUY +5 MOVES
+    m_Metadata:
+      m_Items: []
+  - m_Id: 16259452588045
+    m_Localized: LEVEL COMPLETE!
+    m_Metadata:
+      m_Items: []
+  - m_Id: 16259452588046
+    m_Localized: LEVEL FAILED
+    m_Metadata:
+      m_Items: []
+  - m_Id: 16259452588047
+    m_Localized: OBJECTIVE COMPLETED
+    m_Metadata:
+      m_Items: []
+  - m_Id: 16259452588048
+    m_Localized: NO MOVES LEFT
+    m_Metadata:
+      m_Items: []
+  - m_Id: 16259452588049
+    m_Localized: NO AVAILABLE PLACEMENTS
+    m_Metadata:
+      m_Items: []
+  - m_Id: 16259452588050
+    m_Localized: REACH SCORE
+    m_Metadata:
+      m_Items: []
+  - m_Id: 16259452588051
+    m_Localized: CLEAR LINES
+    m_Metadata:
+      m_Items: []
+  - m_Id: 16259452588052
+    m_Localized: PLACE BLOCKS
+    m_Metadata:
+      m_Items: []
+  - m_Id: 16259452588053
+    m_Localized: CLEAR OBSTACLES
+    m_Metadata:
+      m_Items: []
+  - m_Id: 16259452588054
+    m_Localized: CLEAR ROWS
+    m_Metadata:
+      m_Items: []
+  - m_Id: 16259452588055
+    m_Localized: CLEAR COLUMNS
+    m_Metadata:
+      m_Items: []
+  - m_Id: 16259452588056
+    m_Localized: OBJECTIVE
+    m_Metadata:
+      m_Items: []
+  - m_Id: 16259452588057
+    m_Localized: COIN SHOP
+    m_Metadata:
+      m_Items: []
+  - m_Id: 16259465170944
+    m_Localized: SHOP
+    m_Metadata:
+      m_Items: []
+  - m_Id: 16259465170945
+    m_Localized: UNDO
+    m_Metadata:
+      m_Items: []
+  - m_Id: 16259465170946
+    m_Localized: REROLL
+    m_Metadata:
+      m_Items: []
+  - m_Id: 16259465170947
+    m_Localized: BUY MOVES
+    m_Metadata:
+      m_Items: []
+  - m_Id: 16259465170948
+    m_Localized: UNDO LAST MOVE
+    m_Metadata:
+      m_Items: []
+  - m_Id: 16259465170949
+    m_Localized: REPLACE REMAINING BLOCKS
+    m_Metadata:
+      m_Items: []
+  - m_Id: 16259465170950
+    m_Localized: FREE COINS
+    m_Metadata:
+      m_Items: []
+  - m_Id: 16259465170951
+    m_Localized: WATCH AD
+    m_Metadata:
+      m_Items: []
+  - m_Id: 16259465170952
+    m_Localized: WATCH AD - UNDO
+    m_Metadata:
+      m_Items: []
+  - m_Id: 16259465170953
+    m_Localized: AD SHUFFLE ({0})
+    m_Metadata:
+      m_Items: []
+  - m_Id: 16259465170954
+    m_Localized: WATCH AD & CONTINUE + 3 BLOCKS
+    m_Metadata:
+      m_Items: []
+  - m_Id: 16259465170955
+    m_Localized: AD NOT READY
+    m_Metadata:
+      m_Items: []
+  - m_Id: 16259465170956
+    m_Localized: LOADING AD...
+    m_Metadata:
+      m_Items: []
+  - m_Id: 16259465170957
+    m_Localized: +{0} COINS
+    m_Metadata:
+      m_Items: []
+  - m_Id: 16259465170958
+    m_Localized: COINS
+    m_Metadata:
+      m_Items: []
+  - m_Id: 16259465170959
+    m_Localized: REWARD ALREADY CLAIMED
+    m_Metadata:
+      m_Items: []
+  - m_Id: 16259465170960
+    m_Localized: BEST SCORE
+    m_Metadata:
+      m_Items: []
+  - m_Id: 16259465170961
+    m_Localized: BEST MOVES
+    m_Metadata:
+      m_Items: []
+  - m_Id: 16259465170962
+    m_Localized: SCORE
+    m_Metadata:
+      m_Items: []
+  - m_Id: 16259465170963
+    m_Localized: LEVEL
+    m_Metadata:
+      m_Items: []
+  - m_Id: 16259465170964
+    m_Localized: MOVES
+    m_Metadata:
+      m_Items: []
+  - m_Id: 16259465170965
+    m_Localized: LEVEL {0} UNLOCKED
     m_Metadata:
       m_Items: []
   references:

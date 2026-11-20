@@ -695,6 +695,7 @@ GameObject:
   - component: {fileID: 243017360}
   - component: {fileID: 243017362}
   - component: {fileID: 243017361}
+  - component: {fileID: 243017363}
   m_Layer: 5
   m_Name: MusicToggleText
   m_TagString: Untagged
@@ -821,6 +822,20 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 243017359}
   m_CullTransparentMesh: 1
+--- !u!114 &243017363
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 243017359}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 6f8aa24e12c278341892f73867550adb, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::BlockPuzzle.UI.LocalizedTMPLabel
+  tableName: GameUI
+  entryKey: settings.music
 --- !u!1 &258855398
 GameObject:
   m_ObjectHideFlags: 0
@@ -832,6 +847,7 @@ GameObject:
   - component: {fileID: 258855399}
   - component: {fileID: 258855401}
   - component: {fileID: 258855400}
+  - component: {fileID: 258855402}
   m_Layer: 5
   m_Name: TitleText
   m_TagString: Untagged
@@ -958,6 +974,20 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 258855398}
   m_CullTransparentMesh: 1
+--- !u!114 &258855402
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 258855398}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 6f8aa24e12c278341892f73867550adb, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::BlockPuzzle.UI.LocalizedTMPLabel
+  tableName: GameUI
+  entryKey: settings.title
 --- !u!1 &277566168
 GameObject:
   m_ObjectHideFlags: 0
@@ -1674,6 +1704,7 @@ GameObject:
   - component: {fileID: 698251152}
   - component: {fileID: 698251154}
   - component: {fileID: 698251153}
+  - component: {fileID: 698251155}
   m_Layer: 5
   m_Name: Text (TMP)
   m_TagString: Untagged
@@ -1800,6 +1831,20 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 698251151}
   m_CullTransparentMesh: 1
+--- !u!114 &698251155
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 698251151}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 6f8aa24e12c278341892f73867550adb, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::BlockPuzzle.UI.LocalizedTMPLabel
+  tableName: GameUI
+  entryKey: settings.close
 --- !u!1 &730132234
 GameObject:
   m_ObjectHideFlags: 0
@@ -4467,6 +4512,7 @@ GameObject:
   - component: {fileID: 1386453070}
   - component: {fileID: 1386453072}
   - component: {fileID: 1386453071}
+  - component: {fileID: 1386453073}
   m_Layer: 5
   m_Name: SoundToggleText
   m_TagString: Untagged
@@ -4593,6 +4639,20 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1386453069}
   m_CullTransparentMesh: 1
+--- !u!114 &1386453073
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1386453069}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 6f8aa24e12c278341892f73867550adb, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::BlockPuzzle.UI.LocalizedTMPLabel
+  tableName: GameUI
+  entryKey: settings.sound
 --- !u!1 &1400463788
 GameObject:
   m_ObjectHideFlags: 0
@@ -4881,6 +4941,7 @@ GameObject:
   - component: {fileID: 1482347430}
   - component: {fileID: 1482347432}
   - component: {fileID: 1482347431}
+  - component: {fileID: 1482347433}
   m_Layer: 5
   m_Name: HapticsToggleText
   m_TagString: Untagged
@@ -5007,6 +5068,20 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1482347429}
   m_CullTransparentMesh: 1
+--- !u!114 &1482347433
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1482347429}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 6f8aa24e12c278341892f73867550adb, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::BlockPuzzle.UI.LocalizedTMPLabel
+  tableName: GameUI
+  entryKey: settings.haptics
 --- !u!1 &1487681766
 GameObject:
   m_ObjectHideFlags: 0
@@ -5215,6 +5290,7 @@ GameObject:
   - component: {fileID: 1678535461}
   - component: {fileID: 1678535463}
   - component: {fileID: 1678535462}
+  - component: {fileID: 1678535464}
   m_Layer: 5
   m_Name: Text (TMP)
   m_TagString: Untagged
@@ -5341,6 +5417,20 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1678535460}
   m_CullTransparentMesh: 1
+--- !u!114 &1678535464
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1678535460}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 6f8aa24e12c278341892f73867550adb, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::BlockPuzzle.UI.LocalizedTMPLabel
+  tableName: GameUI
+  entryKey: settings.privacy
 --- !u!1 &1713342971
 GameObject:
   m_ObjectHideFlags: 0

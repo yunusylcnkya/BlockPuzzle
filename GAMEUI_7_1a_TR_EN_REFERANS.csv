@@ -1,0 +1,56 @@
+﻿Key,English (en),Turkish (tr)
+menu.classic,CLASSIC,KLASİK
+menu.adventure,ADVENTURE,MACERA
+settings.language,LANGUAGE,DİL
+game.restart,RESTART,YENİDEN BAŞLAT
+game.over,GAME OVER,OYUN BİTTİ
+game.continue_ad,WATCH AD & CONTINUE,REKLAM İZLE VE DEVAM ET
+settings.title,SETTINGS,AYARLAR
+settings.music,MUSIC,MÜZİK
+settings.sound,SOUND EFFECTS,SES EFEKTLERİ
+settings.haptics,VIBRATION,TİTREŞİM
+settings.close,CLOSE,KAPAT
+settings.privacy,PRIVACY CHOICES,GİZLİLİK SEÇENEKLERİ
+nav.main_menu,MAIN MENU,ANA MENÜ
+nav.back,BACK,GERİ
+game.best,BEST,EN YÜKSEK
+game.your_score,YOUR SCORE,PUANIN
+game.next_level,NEXT LEVEL,SONRAKİ BÖLÜM
+game.retry,RETRY,TEKRAR DENE
+game.map,ADVENTURE MAP,MACERA HARİTASI
+game.buy_extra_moves,BUY +5 MOVES,+5 HAMLE AL
+game.level_complete,LEVEL COMPLETE!,BÖLÜM TAMAMLANDI!
+game.level_failed,LEVEL FAILED,BÖLÜM BAŞARISIZ
+game.objective_completed,OBJECTIVE COMPLETED,HEDEF TAMAMLANDI
+game.no_moves_left,NO MOVES LEFT,HAMLE HAKKI KALMADI
+game.no_available_placements,NO AVAILABLE PLACEMENTS,YERLEŞTİRİLEBİLECEK BLOK YOK
+objective.reach_score,REACH SCORE,HEDEF PUANA ULAŞ
+objective.clear_lines,CLEAR LINES,SATIR/SÜTUN TEMİZLE
+objective.place_blocks,PLACE BLOCKS,BLOK YERLEŞTİR
+objective.clear_obstacles,CLEAR OBSTACLES,ENGELLERİ TEMİZLE
+objective.clear_rows,CLEAR ROWS,SATIR TEMİZLE
+objective.clear_columns,CLEAR COLUMNS,SÜTUN TEMİZLE
+objective.default,OBJECTIVE,HEDEF
+shop.title,COIN SHOP,JETON MAĞAZASI
+shop.open,SHOP,MAĞAZA
+shop.undo,UNDO,GERİ AL
+shop.reroll,REROLL,KARIŞTIR
+shop.buy_moves,BUY MOVES,HAMLE SATIN AL
+shop.undo_desc,UNDO LAST MOVE,SON HAMLEYİ GERİ AL
+shop.reroll_desc,REPLACE REMAINING BLOCKS,KALAN BLOKLARI DEĞİŞTİR
+map.free_coins,FREE COINS,ÜCRETSİZ JETON
+map.watch_ad,WATCH AD,REKLAM İZLE
+classic.undo_ad,WATCH AD - UNDO,REKLAM İZLE - GERİ AL
+classic.shuffle_ad,AD SHUFFLE ({0}),REKLAMLA KARIŞTIR ({0})
+classic.continue_ad3,WATCH AD & CONTINUE + 3 BLOCKS,"REKLAM İZLE, 3 BLOKLA DEVAM ET"
+ad.not_ready,AD NOT READY,REKLAM HAZIR DEĞİL
+ad.loading,LOADING AD...,REKLAM YÜKLENİYOR...
+ad.reward_coins,+{0} COINS,+{0} JETON
+game.coins,COINS,JETON
+game.reward_already_claimed,REWARD ALREADY CLAIMED,ÖDÜL ÖNCEDEN ALINDI
+game.best_score,BEST SCORE,EN YÜKSEK PUAN
+game.best_moves,BEST MOVES,EN AZ HAMLE
+game.score,SCORE,PUAN
+game.level,LEVEL,BÖLÜM
+game.moves,MOVES,HAMLE
+map.unlocked,LEVEL {0} UNLOCKED,BÖLÜM {0} AÇILDI

@@ -39,6 +39,202 @@ MonoBehaviour:
     m_Key: game.continue_ad
     m_Metadata:
       m_Items: []
+  - m_Id: 16259402256384
+    m_Key: settings.title
+    m_Metadata:
+      m_Items: []
+  - m_Id: 16259452588032
+    m_Key: settings.music
+    m_Metadata:
+      m_Items: []
+  - m_Id: 16259452588033
+    m_Key: settings.sound
+    m_Metadata:
+      m_Items: []
+  - m_Id: 16259452588034
+    m_Key: settings.haptics
+    m_Metadata:
+      m_Items: []
+  - m_Id: 16259452588035
+    m_Key: settings.close
+    m_Metadata:
+      m_Items: []
+  - m_Id: 16259452588036
+    m_Key: settings.privacy
+    m_Metadata:
+      m_Items: []
+  - m_Id: 16259452588037
+    m_Key: nav.main_menu
+    m_Metadata:
+      m_Items: []
+  - m_Id: 16259452588038
+    m_Key: nav.back
+    m_Metadata:
+      m_Items: []
+  - m_Id: 16259452588039
+    m_Key: game.best
+    m_Metadata:
+      m_Items: []
+  - m_Id: 16259452588040
+    m_Key: game.your_score
+    m_Metadata:
+      m_Items: []
+  - m_Id: 16259452588041
+    m_Key: game.next_level
+    m_Metadata:
+      m_Items: []
+  - m_Id: 16259452588042
+    m_Key: game.retry
+    m_Metadata:
+      m_Items: []
+  - m_Id: 16259452588043
+    m_Key: game.map
+    m_Metadata:
+      m_Items: []
+  - m_Id: 16259452588044
+    m_Key: game.buy_extra_moves
+    m_Metadata:
+      m_Items: []
+  - m_Id: 16259452588045
+    m_Key: game.level_complete
+    m_Metadata:
+      m_Items: []
+  - m_Id: 16259452588046
+    m_Key: game.level_failed
+    m_Metadata:
+      m_Items: []
+  - m_Id: 16259452588047
+    m_Key: game.objective_completed
+    m_Metadata:
+      m_Items: []
+  - m_Id: 16259452588048
+    m_Key: game.no_moves_left
+    m_Metadata:
+      m_Items: []
+  - m_Id: 16259452588049
+    m_Key: game.no_available_placements
+    m_Metadata:
+      m_Items: []
+  - m_Id: 16259452588050
+    m_Key: objective.reach_score
+    m_Metadata:
+      m_Items: []
+  - m_Id: 16259452588051
+    m_Key: objective.clear_lines
+    m_Metadata:
+      m_Items: []
+  - m_Id: 16259452588052
+    m_Key: objective.place_blocks
+    m_Metadata:
+      m_Items: []
+  - m_Id: 16259452588053
+    m_Key: objective.clear_obstacles
+    m_Metadata:
+      m_Items: []
+  - m_Id: 16259452588054
+    m_Key: objective.clear_rows
+    m_Metadata:
+      m_Items: []
+  - m_Id: 16259452588055
+    m_Key: objective.clear_columns
+    m_Metadata:
+      m_Items: []
+  - m_Id: 16259452588056
+    m_Key: objective.default
+    m_Metadata:
+      m_Items: []
+  - m_Id: 16259452588057
+    m_Key: shop.title
+    m_Metadata:
+      m_Items: []
+  - m_Id: 16259465170944
+    m_Key: shop.open
+    m_Metadata:
+      m_Items: []
+  - m_Id: 16259465170945
+    m_Key: shop.undo
+    m_Metadata:
+      m_Items: []
+  - m_Id: 16259465170946
+    m_Key: shop.reroll
+    m_Metadata:
+      m_Items: []
+  - m_Id: 16259465170947
+    m_Key: shop.buy_moves
+    m_Metadata:
+      m_Items: []
+  - m_Id: 16259465170948
+    m_Key: shop.undo_desc
+    m_Metadata:
+      m_Items: []
+  - m_Id: 16259465170949
+    m_Key: shop.reroll_desc
+    m_Metadata:
+      m_Items: []
+  - m_Id: 16259465170950
+    m_Key: map.free_coins
+    m_Metadata:
+      m_Items: []
+  - m_Id: 16259465170951
+    m_Key: map.watch_ad
+    m_Metadata:
+      m_Items: []
+  - m_Id: 16259465170952
+    m_Key: classic.undo_ad
+    m_Metadata:
+      m_Items: []
+  - m_Id: 16259465170953
+    m_Key: classic.shuffle_ad
+    m_Metadata:
+      m_Items: []
+  - m_Id: 16259465170954
+    m_Key: classic.continue_ad3
+    m_Metadata:
+      m_Items: []
+  - m_Id: 16259465170955
+    m_Key: ad.not_ready
+    m_Metadata:
+      m_Items: []
+  - m_Id: 16259465170956
+    m_Key: ad.loading
+    m_Metadata:
+      m_Items: []
+  - m_Id: 16259465170957
+    m_Key: ad.reward_coins
+    m_Metadata:
+      m_Items: []
+  - m_Id: 16259465170958
+    m_Key: game.coins
+    m_Metadata:
+      m_Items: []
+  - m_Id: 16259465170959
+    m_Key: game.reward_already_claimed
+    m_Metadata:
+      m_Items: []
+  - m_Id: 16259465170960
+    m_Key: game.best_score
+    m_Metadata:
+      m_Items: []
+  - m_Id: 16259465170961
+    m_Key: game.best_moves
+    m_Metadata:
+      m_Items: []
+  - m_Id: 16259465170962
+    m_Key: game.score
+    m_Metadata:
+      m_Items: []
+  - m_Id: 16259465170963
+    m_Key: game.level
+    m_Metadata:
+      m_Items: []
+  - m_Id: 16259465170964
+    m_Key: game.moves
+    m_Metadata:
+      m_Items: []
+  - m_Id: 16259465170965
+    m_Key: map.unlocked
+    m_Metadata:
+      m_Items: []
   m_Metadata:
     m_Items: []
   m_KeyGenerator:

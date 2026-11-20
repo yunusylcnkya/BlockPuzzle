@@ -19,7 +19,7 @@ MonoBehaviour:
     m_Items: []
   m_TableData:
   - m_Id: 31342284800
-    m_Localized: KLASIK
+    m_Localized: "KLAS\u0130K"
     m_Metadata:
       m_Items: []
   - m_Id: 89387257856
@@ -27,19 +27,215 @@ MonoBehaviour:
     m_Metadata:
       m_Items: []
   - m_Id: 119452028928
-    m_Localized: DIL
+    m_Localized: "D\u0130L"
     m_Metadata:
       m_Items: []
   - m_Id: 161965494272
-    m_Localized: YENIDEN BASLAT
+    m_Localized: "YEN\u0130DEN BA\u015ELAT"
     m_Metadata:
       m_Items: []
   - m_Id: 209541484544
-    m_Localized: REKLAM IZLE VE DEVAM ET
+    m_Localized: "OYUN B\u0130TT\u0130"
     m_Metadata:
       m_Items: []
   - m_Id: 283558367232
-    m_Localized: WATCH AD & CONTINUE
+    m_Localized: "REKLAM \u0130ZLE VE DEVAM ET"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 16259402256384
+    m_Localized: AYARLAR
+    m_Metadata:
+      m_Items: []
+  - m_Id: 16259452588032
+    m_Localized: "M\xDCZ\u0130K"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 16259452588033
+    m_Localized: "SES EFEKTLER\u0130"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 16259452588034
+    m_Localized: "T\u0130TRE\u015E\u0130M"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 16259452588035
+    m_Localized: KAPAT
+    m_Metadata:
+      m_Items: []
+  - m_Id: 16259452588036
+    m_Localized: "G\u0130ZL\u0130L\u0130K SE\xC7ENEKLER\u0130"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 16259452588037
+    m_Localized: "ANA MEN\xDC"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 16259452588038
+    m_Localized: "GER\u0130"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 16259452588039
+    m_Localized: "EN Y\xDCKSEK"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 16259452588040
+    m_Localized: PUANIN
+    m_Metadata:
+      m_Items: []
+  - m_Id: 16259452588041
+    m_Localized: "SONRAK\u0130 B\xD6L\xDCM"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 16259452588042
+    m_Localized: TEKRAR DENE
+    m_Metadata:
+      m_Items: []
+  - m_Id: 16259452588043
+    m_Localized: "MACERA HAR\u0130TASI"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 16259452588044
+    m_Localized: +5 HAMLE AL
+    m_Metadata:
+      m_Items: []
+  - m_Id: 16259452588045
+    m_Localized: "B\xD6L\xDCM TAMAMLANDI!"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 16259452588046
+    m_Localized: "B\xD6L\xDCM BA\u015EARISIZ"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 16259452588047
+    m_Localized: HEDEF TAMAMLANDI
+    m_Metadata:
+      m_Items: []
+  - m_Id: 16259452588048
+    m_Localized: HAMLE HAKKI KALMADI
+    m_Metadata:
+      m_Items: []
+  - m_Id: 16259452588049
+    m_Localized: "YERLE\u015ET\u0130R\u0130LEB\u0130LECEK BLOK YOK"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 16259452588050
+    m_Localized: "HEDEF PUANA ULA\u015E"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 16259452588051
+    m_Localized: "SATIR/S\xDCTUN TEM\u0130ZLE"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 16259452588052
+    m_Localized: "BLOK YERLE\u015ET\u0130R"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 16259452588053
+    m_Localized: "ENGELLER\u0130 TEM\u0130ZLE"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 16259452588054
+    m_Localized: "SATIR TEM\u0130ZLE"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 16259452588055
+    m_Localized: "S\xDCTUN TEM\u0130ZLE"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 16259452588056
+    m_Localized: HEDEF
+    m_Metadata:
+      m_Items: []
+  - m_Id: 16259452588057
+    m_Localized: "JETON MA\u011EAZASI"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 16259465170944
+    m_Localized: "MA\u011EAZA"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 16259465170945
+    m_Localized: "GER\u0130 AL"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 16259465170946
+    m_Localized: "KARI\u015ETIR"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 16259465170947
+    m_Localized: HAMLE SATIN AL
+    m_Metadata:
+      m_Items: []
+  - m_Id: 16259465170948
+    m_Localized: "SON HAMLEY\u0130 GER\u0130 AL"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 16259465170949
+    m_Localized: "KALAN BLOKLARI DE\u011E\u0130\u015ET\u0130R"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 16259465170950
+    m_Localized: "\xDCCRETS\u0130Z JETON"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 16259465170951
+    m_Localized: "REKLAM \u0130ZLE"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 16259465170952
+    m_Localized: "REKLAM \u0130ZLE - GER\u0130 AL"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 16259465170953
+    m_Localized: "REKLAMLA KARI\u015ETIR ({0})"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 16259465170954
+    m_Localized: "REKLAM \u0130ZLE, 3 BLOKLA DEVAM ET"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 16259465170955
+    m_Localized: "REKLAM HAZIR DE\u011E\u0130L"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 16259465170956
+    m_Localized: "REKLAM Y\xDCKLEN\u0130YOR..."
+    m_Metadata:
+      m_Items: []
+  - m_Id: 16259465170957
+    m_Localized: +{0} JETON
+    m_Metadata:
+      m_Items: []
+  - m_Id: 16259465170958
+    m_Localized: JETON
+    m_Metadata:
+      m_Items: []
+  - m_Id: 16259465170959
+    m_Localized: "\xD6D\xDCL \xD6NCEDEN ALINDI"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 16259465170960
+    m_Localized: "EN Y\xDCKSEK PUAN"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 16259465170961
+    m_Localized: EN AZ HAMLE
+    m_Metadata:
+      m_Items: []
+  - m_Id: 16259465170962
+    m_Localized: PUAN
+    m_Metadata:
+      m_Items: []
+  - m_Id: 16259465170963
+    m_Localized: "B\xD6L\xDCM"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 16259465170964
+    m_Localized: HAMLE
+    m_Metadata:
+      m_Items: []
+  - m_Id: 16259465170965
+    m_Localized: "B\xD6L\xDCM {0} A\xC7ILDI"
     m_Metadata:
       m_Items: []
   references:
