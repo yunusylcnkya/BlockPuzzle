@@ -19,23 +19,23 @@ MonoBehaviour:
     m_Items: []
   m_TableData:
   - m_Id: 31342284800
-    m_Localized: CLASSIC
+    m_Localized: KLASIK
     m_Metadata:
       m_Items: []
   - m_Id: 89387257856
-    m_Localized: ADVENTURE
+    m_Localized: MACERA
     m_Metadata:
       m_Items: []
   - m_Id: 119452028928
-    m_Localized: LANGUAGE
+    m_Localized: DIL
     m_Metadata:
       m_Items: []
   - m_Id: 161965494272
-    m_Localized: RESTART
+    m_Localized: YENIDEN BASLAT
     m_Metadata:
       m_Items: []
   - m_Id: 209541484544
-    m_Localized: GAME OVER
+    m_Localized: REKLAM IZLE VE DEVAM ET
     m_Metadata:
       m_Items: []
   - m_Id: 283558367232
