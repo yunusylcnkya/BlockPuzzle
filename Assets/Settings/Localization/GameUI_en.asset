@@ -1,0 +1,47 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: e9620f8c34305754d8cc9a7e49e852d9, type: 3}
+  m_Name: GameUI_en
+  m_EditorClassIdentifier: Unity.Localization::UnityEngine.Localization.Tables.StringTable
+  m_LocaleId:
+    m_Code: en
+  m_SharedData: {fileID: 11400000, guid: e2aa39d95a7f9fa46a988a022287346f, type: 2}
+  m_Metadata:
+    m_Items: []
+  m_TableData:
+  - m_Id: 31342284800
+    m_Localized: "KLAS\u0130K"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 89387257856
+    m_Localized: MACERA
+    m_Metadata:
+      m_Items: []
+  - m_Id: 119452028928
+    m_Localized: "D\u0130L"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 161965494272
+    m_Localized: "YEN\u0130DEN BA\u015ELAT"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 209541484544
+    m_Localized: "OYUN B\u0130TT\u0130"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 283558367232
+    m_Localized: "REKLAM \u0130ZLE VE DEVAM ET"
+    m_Metadata:
+      m_Items: []
+  references:
+    version: 2
+    RefIds: []

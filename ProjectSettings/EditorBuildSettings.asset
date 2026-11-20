@@ -24,4 +24,6 @@ EditorBuildSettings:
     path: Assets/_Project/Scenes/AdventureGame.unity
     guid: 6679c22efaaec6546bc0815b717f7bb8
   m_configObjects:
+    com.unity.addressableassets: {fileID: 11400000, guid: ab3512154c8406f4da04f6504c1a3124, type: 2}
     com.unity.input.settings.actions: {fileID: -944628639613478452, guid: 2bcd2660ca9b64942af0de543d8d7100, type: 3}
+    com.unity.localization.settings: {fileID: 11400000, guid: ed79f3772cc11704ca2a3d60fbf1e52a, type: 2}
