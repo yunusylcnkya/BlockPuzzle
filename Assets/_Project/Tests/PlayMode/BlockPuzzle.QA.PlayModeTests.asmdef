@@ -1,0 +1,21 @@
+{
+  "name": "BlockPuzzle.QA.PlayModeTests",
+  "rootNamespace": "BlockPuzzle.QA.PlayMode",
+  "references": [
+    "UnityEngine.TestRunner",
+    "UnityEditor.TestRunner",
+    "UnityEngine.UI",
+    "UnityEngine.EventSystems"
+  ],
+  "includePlatforms": [],
+  "excludePlatforms": [],
+  "allowUnsafeCode": false,
+  "overrideReferences": true,
+  "precompiledReferences": [
+    "nunit.framework.dll"
+  ],
+  "autoReferenced": false,
+  "defineConstraints": [],
+  "versionDefines": [],
+  "noEngineReferences": false
+}

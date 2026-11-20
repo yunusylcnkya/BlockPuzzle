@@ -3,6 +3,7 @@
   <Project Path="Assembly-CSharp-Editor.csproj" />
   <Project Path="BlockPuzzle.AdventureRules.csproj" />
   <Project Path="BlockPuzzle.ClassicPersistence.csproj" />
+  <Project Path="BlockPuzzle.QA.PlayModeTests.csproj" />
   <Project Path="BlockPuzzle.ClassicPersistence.EditModeTests.csproj" />
   <Project Path="BlockPuzzle.AdventureRules.EditModeTests.csproj" />
   <Project Path="BlockPuzzle.Selection.csproj" />
